@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui";
 export const metadata: Metadata = { title: "Portal" };
 
 /** Fase atual do sistema: seções de fases posteriores mostram "em breve". */
-const CURRENT_PHASE = 2;
+const CURRENT_PHASE = 3;
 
 export default async function PortalHome({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

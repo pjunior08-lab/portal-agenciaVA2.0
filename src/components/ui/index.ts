@@ -7,3 +7,4 @@ export * from "./feedback";
 export * from "./modal";
 export * from "./menu";
 export * from "./controls";
+export * from "./month-calendar";

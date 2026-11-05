@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Clock, Download, FileText, StickyNote } from "lucide-react";
+import { Clock, Download, FileText, Loader, StickyNote } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { signedUrls } from "@/lib/storage";
 import { getPortal } from "@/features/portal/context";
 import { PORTAL_SECTIONS } from "@/features/clientes/schemas";
-import { EmptyState, SectionCard } from "@/components/ui";
+import { Badge, EmptyState, ErrorState, SectionCard } from "@/components/ui";
+import { shortDate } from "@/lib/dates";
 import { formatBytes } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Portal" };
@@ -53,6 +54,34 @@ export default async function PortalSection({ params }: { params: Promise<{ slug
                     <Download className="size-3.5" aria-hidden /> Baixar
                   </a>
                 )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </SectionCard>
+    );
+  }
+
+  if (section.id === "em-andamento") {
+    // RPC devolve só demandas do cliente fora de coluna "concluída", sem dados internos (responsáveis, descrição)
+    const { data, error } = await supabase.rpc("portal_tasks_in_progress", { c: p.clientId });
+    if (error) return <ErrorState description="Não foi possível carregar o que está em andamento." />;
+    return (
+      <SectionCard title="Em andamento" icon={Loader} description="O que a agência está produzindo para você agora.">
+        {!data?.length ? (
+          <EmptyState icon={Loader} title="Nada em andamento no momento" />
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {data.map((t) => (
+              <li key={t.id} className="flex items-center gap-3 rounded-xl bg-surface-2 px-3 py-2.5">
+                <span className="size-2.5 shrink-0 rounded-full" style={{ background: t.column_color }} aria-hidden />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm">{t.title}</p>
+                  <p className="text-[11px] text-muted">
+                    {t.type === "post" ? "Post" : "Demanda"} · {t.column_name}
+                  </p>
+                </div>
+                {t.due_date && <Badge>Prazo {shortDate(t.due_date)}</Badge>}
               </li>
             ))}
           </ul>

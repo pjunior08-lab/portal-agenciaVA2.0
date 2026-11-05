@@ -5,11 +5,217 @@ type AppRole = "admin" | "colaborador";
 type MemberStatus = "ativo" | "desativado";
 type AccessLevel = "ver" | "editar";
 type ClientStatus = "ativo" | "pausado" | "inativo" | "arquivado";
+type TaskType = "post" | "demanda";
+type TaskPriority = "alta" | "media" | "baixa";
+type CardImage = "miniatura" | "capa" | "sem";
+type AttachmentKind = "arquivo" | "link";
+type EventVisibility = "agencia" | "privado";
 
 export type Database = {
   __InternalSupabase: { PostgrestVersion: "14.18" };
   public: {
     Tables: {
+      boards: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          card_image: CardImage;
+          position: number;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["boards"]["Row"]> & Pick<Database["public"]["Tables"]["boards"]["Row"], "agency_id" | "name">;
+        Update: Partial<Database["public"]["Tables"]["boards"]["Row"]>;
+        Relationships: [];
+      };
+      board_columns: {
+        Row: {
+          id: string;
+          agency_id: string;
+          board_id: string;
+          name: string;
+          color: string;
+          position: number;
+          is_done: boolean;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["board_columns"]["Row"]> & Pick<Database["public"]["Tables"]["board_columns"]["Row"], "agency_id" | "board_id" | "name">;
+        Update: Partial<Database["public"]["Tables"]["board_columns"]["Row"]>;
+        Relationships: [];
+      };
+      labels: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          color: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["labels"]["Row"]> & Pick<Database["public"]["Tables"]["labels"]["Row"], "agency_id" | "name">;
+        Update: Partial<Database["public"]["Tables"]["labels"]["Row"]>;
+        Relationships: [];
+      };
+      tasks: {
+        Row: {
+          id: string;
+          agency_id: string;
+          board_id: string;
+          column_id: string;
+          client_id: string | null;
+          label_id: string | null;
+          type: TaskType;
+          title: string;
+          description: string;
+          caption: string;
+          priority: TaskPriority | null;
+          start_date: string | null;
+          due_date: string | null;
+          publish_at: string | null;
+          position: number;
+          completed_at: string | null;
+          archived_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["tasks"]["Row"]> & Pick<Database["public"]["Tables"]["tasks"]["Row"], "agency_id" | "board_id" | "column_id" | "title">;
+        Update: Partial<Database["public"]["Tables"]["tasks"]["Row"]>;
+        Relationships: [];
+      };
+      task_assignees: {
+        Row: {
+          task_id: string;
+          user_id: string;
+          agency_id: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["task_assignees"]["Row"]> & Pick<Database["public"]["Tables"]["task_assignees"]["Row"], "task_id" | "user_id" | "agency_id">;
+        Update: Partial<Database["public"]["Tables"]["task_assignees"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "task_assignees_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "tasks";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_assignees_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      task_attachments: {
+        Row: {
+          id: string;
+          agency_id: string;
+          task_id: string;
+          kind: AttachmentKind;
+          name: string;
+          url: string | null;
+          path: string | null;
+          size_bytes: number | null;
+          mime_type: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["task_attachments"]["Row"]> & Pick<Database["public"]["Tables"]["task_attachments"]["Row"], "agency_id" | "task_id" | "kind" | "name">;
+        Update: Partial<Database["public"]["Tables"]["task_attachments"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "task_attachments_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "tasks";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      events: {
+        Row: {
+          id: string;
+          agency_id: string;
+          owner_id: string;
+          client_id: string | null;
+          title: string;
+          description: string;
+          location: string | null;
+          starts_at: string;
+          ends_at: string;
+          all_day: boolean;
+          visibility: EventVisibility;
+          done_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["events"]["Row"]> & Pick<Database["public"]["Tables"]["events"]["Row"], "agency_id" | "owner_id" | "title" | "starts_at" | "ends_at">;
+        Update: Partial<Database["public"]["Tables"]["events"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "events_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      event_attendees: {
+        Row: {
+          event_id: string;
+          user_id: string;
+          agency_id: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["event_attendees"]["Row"]> & Pick<Database["public"]["Tables"]["event_attendees"]["Row"], "event_id" | "user_id" | "agency_id">;
+        Update: Partial<Database["public"]["Tables"]["event_attendees"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "event_attendees_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_attendees_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      availability_rules: {
+        Row: {
+          id: string;
+          agency_id: string;
+          user_id: string;
+          weekday: number;
+          start_time: string;
+          end_time: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["availability_rules"]["Row"]> & Pick<Database["public"]["Tables"]["availability_rules"]["Row"], "agency_id" | "user_id" | "weekday" | "start_time" | "end_time">;
+        Update: Partial<Database["public"]["Tables"]["availability_rules"]["Row"]>;
+        Relationships: [];
+      };
+      checklist_items: {
+        Row: {
+          id: string;
+          agency_id: string;
+          user_id: string;
+          title: string;
+          due_date: string | null;
+          done_at: string | null;
+          position: number;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["checklist_items"]["Row"]> & Pick<Database["public"]["Tables"]["checklist_items"]["Row"], "agency_id" | "user_id" | "title">;
+        Update: Partial<Database["public"]["Tables"]["checklist_items"]["Row"]>;
+        Relationships: [];
+      };
       clients: {
         Row: {
           address: string | null;
@@ -353,6 +559,19 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      create_board: { Args: { a: string; board_name: string }; Returns: string };
+      portal_tasks_in_progress: {
+        Args: { c: string };
+        Returns: {
+          id: string;
+          title: string;
+          type: TaskType;
+          column_name: string;
+          column_color: string;
+          due_date: string | null;
+          publish_at: string | null;
+        }[];
+      };
       create_client_invitation: { Args: { c: string; invite_email: string }; Returns: string };
       client_invitation_preview: {
         Args: { token: string };
@@ -401,3 +620,12 @@ export type AccessLevelT = AccessLevel;
 export type MemberStatusT = MemberStatus;
 export type ClientStatusT = ClientStatus;
 export type ClientRow = Database["public"]["Tables"]["clients"]["Row"];
+export type TaskTypeT = TaskType;
+export type TaskPriorityT = TaskPriority;
+export type CardImageT = CardImage;
+export type EventVisibilityT = EventVisibility;
+export type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
+export type BoardRow = Database["public"]["Tables"]["boards"]["Row"];
+export type ColumnRow = Database["public"]["Tables"]["board_columns"]["Row"];
+export type LabelRow = Database["public"]["Tables"]["labels"]["Row"];
+export type EventRow = Database["public"]["Tables"]["events"]["Row"];

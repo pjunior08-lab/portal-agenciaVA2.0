@@ -120,3 +120,12 @@ test.describe("clientes e portal sem login", () => {
     await expect(page.getByText("Convite inválido")).toBeVisible();
   });
 });
+
+test.describe("demandas, agenda e meu dia sem login", () => {
+  for (const path of ["/demandas", "/agenda", "/meu-dia"]) {
+    test(`${path} exige login e guarda o destino`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path)}$`));
+    });
+  }
+});
