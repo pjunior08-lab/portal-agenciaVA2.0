@@ -50,10 +50,15 @@ test.describe("sem login", () => {
     await expect(page.getByRole("heading", { name: "Recuperar senha" })).toBeVisible();
   });
 
-  test("página de cadastro abre", async ({ page }) => {
+  test("cadastro da agência fica fechado depois do primeiro acesso", async ({ page }) => {
     await page.goto("/cadastro");
-    // sem agência: formulário de criação; com agência: aviso de que já existe
-    await expect(page.getByRole("heading", { level: 1, name: /Criar a agência|A agência já está criada/ })).toBeVisible();
+    // com a agência já criada, volta para o login; sem agência, mostra o formulário de criação
+    await expect(page.getByRole("heading", { level: 1, name: /Entrar|Criar a agência/ })).toBeVisible();
+  });
+
+  test("login não mostra o link de criar agência", async ({ page }) => {
+    await page.goto("/login");
+    await expect(page.getByText("criar a agência")).toHaveCount(0);
   });
 });
 

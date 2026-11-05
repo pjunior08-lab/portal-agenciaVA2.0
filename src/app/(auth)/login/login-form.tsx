@@ -62,9 +62,6 @@ export function LoginForm() {
         <Link href="/recuperar-senha" className="text-muted underline-offset-2 hover:underline">
           Esqueci minha senha
         </Link>
-        <Link href="/cadastro" className="text-muted underline-offset-2 hover:underline">
-          Primeiro acesso: criar a agência
-        </Link>
       </div>
     </form>
   );

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Alert, buttonVariants } from "@/components/ui";
+import { Alert } from "@/components/ui";
 import { SignUpForm } from "./signup-form";
 
 export const metadata: Metadata = { title: "Criar a agência" };
@@ -14,19 +14,9 @@ export default async function CadastroPage() {
     return <Alert>Não foi possível falar com o servidor. Recarregue a página.</Alert>;
   }
 
-  if (exists) {
-    return (
-      <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-semibold">A agência já está criada</h1>
-        <p className="text-sm text-muted">
-          Novas pessoas entram por convite. Peça a um administrador o link de convite com o seu e-mail.
-        </p>
-        <Link href="/login" className={buttonVariants({ variant: "secondary" })}>
-          Voltar para o login
-        </Link>
-      </div>
-    );
-  }
+  // Sistema interno de uma agência só: depois do primeiro acesso esta tela deixa de existir.
+  // Novas pessoas entram por convite (Configurações › Equipe).
+  if (exists) redirect("/login");
 
   return <SignUpForm mode="agency" />;
 }
