@@ -4,10 +4,10 @@ import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Menu, X } from "lucide-react";
 import { Brand } from "./brand";
-import { SidebarContent } from "./sidebar";
+import { SidebarContent, type ShellUser } from "./sidebar";
 
 /** Barra superior com botão que abre o menu em gaveta (telas menores que 1024 px). */
-export function MobileNav() {
+export function MobileNav({ user }: { user: ShellUser }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="sticky top-0 z-40 flex items-center justify-between border-b border-line bg-bg/90 px-4 py-2 backdrop-blur lg:hidden">
@@ -30,7 +30,7 @@ export function MobileNav() {
             >
               <X className="size-4" />
             </Dialog.Close>
-            <SidebarContent onNavigate={() => setOpen(false)} />
+            <SidebarContent user={user} onNavigate={() => setOpen(false)} />
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>

@@ -46,6 +46,31 @@ export function ErrorState({
   );
 }
 
+/** Aviso curto dentro de formulários (erro, sucesso ou informação). */
+export function Alert({
+  tone = "danger",
+  children,
+  className,
+}: {
+  tone?: "danger" | "success" | "info";
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const styles = {
+    danger: "bg-danger-soft text-danger",
+    success: "bg-success-soft text-success",
+    info: "bg-surface-2 text-ink",
+  };
+  return (
+    <div
+      role={tone === "danger" ? "alert" : "status"}
+      className={cn("rounded-xl px-3 py-2.5 text-xs leading-relaxed", styles[tone], className)}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function Skeleton({ className }: { className?: string }) {
   return <div aria-hidden className={cn("animate-pulse rounded-xl bg-surface-3/70", className)} />;
 }

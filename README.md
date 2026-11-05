@@ -37,6 +37,14 @@ src/lib/supabase          clientes do Supabase (navegador e servidor)
 e2e/                      testes de fluxo
 ```
 
+## Supabase
+
+- Migrações em `supabase/migrations/` (aplicadas em ordem). Teste de permissões em `supabase/tests/rls_nucleo.sql` (roda numa transação e desfaz tudo).
+- Papéis: **Administrador** (acesso total) e **Colaborador** (acesso por módulo: ver ou ver e editar, liberado em Configurações › Equipe).
+- Primeiro acesso: `/cadastro` cria a agência e o primeiro administrador. Depois disso, só entra quem recebe convite.
+- Convites: o administrador gera um link (vale 7 dias, só para o e-mail convidado) e envia por WhatsApp ou e-mail.
+- Em Supabase › Authentication › URL Configuration, o **Site URL** e os **Redirect URLs** devem apontar para o endereço do Netlify (`https://SEU-SITE.netlify.app/**`), senão os links de confirmação e de recuperação de senha não voltam para o sistema.
+
 ## Segurança
 
 - Só a URL e a chave **pública** do Supabase vão ao navegador. A chave secreta fica apenas no servidor (variável `SUPABASE_SECRET_KEY` no Netlify, nunca com prefixo `NEXT_PUBLIC_`).
@@ -45,4 +53,4 @@ e2e/                      testes de fluxo
 
 ## Fases
 
-0. Fundação ✅ · 1. Autenticação e núcleo · 2. Clientes e Portal · 3. Demandas, Agenda e Meu Dia · 4. Aprovação e Social · 5. Propostas e Contratos · 6. Financeiro · 7. Comercial · 8. Comunicação, Mapa Mental, Funil e Início · 9. Integrações e módulos a levantar.
+0. Fundação ✅ · 1. Autenticação e núcleo ✅ · 2. Clientes e Portal · 3. Demandas, Agenda e Meu Dia · 4. Aprovação e Social · 5. Propostas e Contratos · 6. Financeiro · 7. Comercial · 8. Comunicação, Mapa Mental, Funil e Início · 9. Integrações e módulos a levantar.

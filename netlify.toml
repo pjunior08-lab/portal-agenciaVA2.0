@@ -5,6 +5,10 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Valores PÚBLICOS do Supabase (podem ficar no repositório; o acesso é limitado pelas políticas RLS).
+  # A chave secreta nunca vai aqui.
+  NEXT_PUBLIC_SUPABASE_URL = "https://vjclcqslgojxtceityii.supabase.co"
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_1SI1c6FB6cmoP8hmw3s4Qg_C1bjAYmW"
 
 # Cabeçalhos de segurança para todas as páginas
 [[headers]]
