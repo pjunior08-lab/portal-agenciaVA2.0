@@ -3,9 +3,9 @@ import { createServerClient } from "@supabase/ssr";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
 /** Rotas que não exigem login. */
-const PUBLIC_PREFIXES = ["/login", "/cadastro", "/recuperar-senha", "/convite", "/auth"];
+const PUBLIC_PREFIXES = ["/login", "/cadastro", "/recuperar-senha", "/convite", "/portal-convite", "/e", "/auth"];
 /** Rotas de login: quem já está logado é mandado para o sistema. */
-const GUEST_ONLY = ["/login", "/cadastro", "/recuperar-senha"];
+const GUEST_ONLY = ["/login", "/cadastro"];
 
 function isPublic(path: string) {
   return PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));

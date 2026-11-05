@@ -91,3 +91,25 @@ test.describe("logado", () => {
     await expect(page.getByText("CPF com 11 números.")).toBeVisible();
   });
 });
+
+test.describe("clientes e portal sem login", () => {
+  test("ficha de cliente exige login", async ({ page }) => {
+    await page.goto("/clientes/00000000-0000-4000-8000-000000000001");
+    await expect(page).toHaveURL(/\/login\?next=/);
+  });
+
+  test("portal exige login", async ({ page }) => {
+    await page.goto("/portal/qualquer-cliente");
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test("link de Central Estratégica inválido é recusado", async ({ page }) => {
+    await page.goto("/e/link-que-nao-existe");
+    await expect(page.getByText("Link inválido")).toBeVisible();
+  });
+
+  test("convite de portal inválido é recusado", async ({ page }) => {
+    await page.goto("/portal-convite/token-que-nao-existe");
+    await expect(page.getByText("Convite inválido")).toBeVisible();
+  });
+});

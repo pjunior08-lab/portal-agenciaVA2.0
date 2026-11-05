@@ -12,3 +12,10 @@ const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" 
 export function formatBRL(value: number) {
   return brl.format(value);
 }
+
+/** Tamanho de arquivo legível (12 KB, 3,4 MB). */
+export function formatBytes(n: number) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 ** 2) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / 1024 ** 2).toFixed(1).replace(".", ",")} MB`;
+}

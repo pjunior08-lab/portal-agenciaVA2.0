@@ -39,7 +39,7 @@ e2e/                      testes de fluxo
 
 ## Supabase
 
-- Migrações em `supabase/migrations/` (aplicadas em ordem). Teste de permissões em `supabase/tests/rls_nucleo.sql` (roda numa transação e desfaz tudo).
+- Migrações em `supabase/migrations/` (aplicadas em ordem). Testes de permissões em `supabase/tests/` (`rls_nucleo.sql`, `rls_clientes.sql`) (roda numa transação e desfaz tudo).
 - Papéis: **Administrador** (acesso total) e **Colaborador** (acesso por módulo: ver ou ver e editar, liberado em Configurações › Equipe).
 - Primeiro acesso: `/cadastro` cria a agência e o primeiro administrador. Depois disso, só entra quem recebe convite.
 - Convites: o administrador gera um link (vale 7 dias, só para o e-mail convidado) e envia por WhatsApp ou e-mail.
@@ -53,4 +53,4 @@ e2e/                      testes de fluxo
 
 ## Fases
 
-0. Fundação ✅ · 1. Autenticação e núcleo ✅ · 2. Clientes e Portal · 3. Demandas, Agenda e Meu Dia · 4. Aprovação e Social · 5. Propostas e Contratos · 6. Financeiro · 7. Comercial · 8. Comunicação, Mapa Mental, Funil e Início · 9. Integrações e módulos a levantar.
+0. Fundação ✅ · 1. Autenticação e núcleo ✅ · 2. Clientes e Portal ✅ · 3. Demandas, Agenda e Meu Dia · 4. Aprovação e Social · 5. Propostas e Contratos · 6. Financeiro · 7. Comercial · 8. Comunicação, Mapa Mental, Funil e Início · 9. Integrações e módulos a levantar.

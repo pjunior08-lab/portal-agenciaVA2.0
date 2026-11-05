@@ -16,6 +16,10 @@ export default async function BoasVindasPage() {
   if (await getMemberContext()) redirect("/inicio");
 
   const supabase = await createClient();
+  // login de cliente: vai direto para o portal
+  const { data: portals } = await supabase.rpc("my_client_portals");
+  if (portals?.length) redirect(`/portal/${portals[0].slug}`);
+
   const { data: exists } = await supabase.rpc("agency_exists");
 
   if (!exists) {

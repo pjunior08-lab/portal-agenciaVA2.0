@@ -6,7 +6,7 @@ import { Alert, Button } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 import { authErrorMessage } from "@/lib/auth/errors";
 
-export function AcceptInvite({ token }: { token: string }) {
+export function AcceptInvite({ token, kind = "equipe" }: { token: string; kind?: "equipe" | "cliente" }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,13 +21,23 @@ export function AcceptInvite({ token }: { token: string }) {
           setLoading(true);
           setError("");
           const supabase = createClient();
-          const { error } = await supabase.rpc("accept_invitation", { token });
-          if (error) {
-            setLoading(false);
-            return setError(authErrorMessage(error));
+          let dest = "/inicio";
+          if (kind === "cliente") {
+            const { data, error } = await supabase.rpc("accept_client_invitation", { token });
+            if (error) {
+              setLoading(false);
+              return setError(authErrorMessage(error));
+            }
+            dest = data ? `/portal/${data}` : "/boas-vindas";
+          } else {
+            const { error } = await supabase.rpc("accept_invitation", { token });
+            if (error) {
+              setLoading(false);
+              return setError(authErrorMessage(error));
+            }
           }
           await supabase.rpc("log_access", { user_agent: navigator.userAgent });
-          router.replace("/inicio");
+          router.replace(dest);
           router.refresh();
         }}
       >
