@@ -1,5 +1,6 @@
 -- Teste de permissões do núcleo. Roda dentro de uma transação e desfaz tudo (rollback).
--- Uso: colar no SQL Editor do Supabase ou rodar com psql. Resultado: uma linha por verificação.
+-- Uso: colar no SQL Editor do Supabase. Só funciona num banco SEM agência (antes do primeiro acesso).
+-- Com a agência já criada, use a versão de rls_nucleo_com_agencia.sql.
 begin;
 
 create temp table resultado (verificacao text, ok boolean) on commit drop;
