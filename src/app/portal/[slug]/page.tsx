@@ -4,17 +4,28 @@ import { ArrowRight, Clock } from "lucide-react";
 import { getPortal } from "@/features/portal/context";
 import { PORTAL_SECTIONS } from "@/features/clientes/schemas";
 import { Badge } from "@/components/ui";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Portal" };
 
 /** Fase atual do sistema: seções de fases posteriores mostram "em breve". */
-const CURRENT_PHASE = 3;
+const CURRENT_PHASE = 4;
 
 export default async function PortalHome({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const p = await getPortal(slug);
   const sections = PORTAL_SECTIONS.filter((s) => p.sections.includes(s.id));
   const first = p.userName.split(/\s+/)[0];
+  let pendingApprovals = 0;
+  if (p.sections.includes("aprovacoes")) {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from("posts")
+      .select("id", { count: "exact", head: true })
+      .eq("client_id", p.clientId)
+      .in("status", ["enviado", "em_analise"]);
+    pendingApprovals = count ?? 0;
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -36,7 +47,11 @@ export default async function PortalHome({ params }: { params: Promise<{ slug: s
                 >
                   <span className="font-medium">{s.label}</span>
                   {ready ? (
-                    <ArrowRight className="size-4 text-muted" aria-hidden />
+                    s.id === "aprovacoes" && pendingApprovals > 0 ? (
+                      <Badge tone="brand">{pendingApprovals} aguardando</Badge>
+                    ) : (
+                      <ArrowRight className="size-4 text-muted" aria-hidden />
+                    )
                   ) : (
                     <Badge>
                       <Clock className="size-3" aria-hidden /> Em breve

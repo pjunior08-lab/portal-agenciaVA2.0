@@ -129,3 +129,17 @@ test.describe("demandas, agenda e meu dia sem login", () => {
     });
   }
 });
+
+test.describe("aprovação e social sem login", () => {
+  for (const path of ["/aprovacoes", "/social"]) {
+    test(`${path} exige login e guarda o destino`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path)}$`));
+    });
+  }
+
+  test("aprovação no portal exige login", async ({ page }) => {
+    await page.goto("/portal/qualquer-cliente/aprovacoes");
+    await expect(page).toHaveURL(/\/login/);
+  });
+});

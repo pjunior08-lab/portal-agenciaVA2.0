@@ -138,7 +138,8 @@ export const MODULES: ModuleDef[] = [
     summary: "Agendamentos, métricas e contas de redes sociais dos clientes.",
     features: [
       "Calendário de agendamentos",
-      "Conexão de contas (publicação real na Fase 9)",
+      "Cadastro das contas de cada cliente",
+      "Conexão oficial, publicação automática e métricas na Fase 9",
     ],
   },
   {

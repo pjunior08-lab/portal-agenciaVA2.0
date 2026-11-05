@@ -39,7 +39,7 @@ Select.displayName = "Select";
 interface FieldProps {
   label: string;
   htmlFor: string;
-  hint?: string;
+  hint?: React.ReactNode;
   error?: string;
   required?: boolean;
   className?: string;

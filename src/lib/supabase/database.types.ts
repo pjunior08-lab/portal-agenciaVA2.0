@@ -10,6 +10,14 @@ type TaskPriority = "alta" | "media" | "baixa";
 type CardImage = "miniatura" | "capa" | "sem";
 type AttachmentKind = "arquivo" | "link";
 type EventVisibility = "agencia" | "privado";
+type ApprovalKind = "post" | "demanda";
+type ApprovalMode = "rapida" | "detalhada";
+type ApprovalStatus = "enviado" | "em_analise" | "aprovado" | "alteracoes" | "reprovado";
+type ApprovalPart = "geral" | "tema" | "midias" | "legenda";
+type ApprovalDecision = "aprovado" | "alteracoes" | "reprovado";
+type PublishMode = "manual" | "automatica";
+type SocialNetwork = "instagram" | "facebook" | "tiktok" | "youtube" | "linkedin";
+type PublicationStatus = "agendado" | "publicado" | "cancelado";
 
 export type Database = {
   __InternalSupabase: { PostgrestVersion: "14.18" };
@@ -200,6 +208,130 @@ export type Database = {
         Insert: Partial<Database["public"]["Tables"]["availability_rules"]["Row"]> & Pick<Database["public"]["Tables"]["availability_rules"]["Row"], "agency_id" | "user_id" | "weekday" | "start_time" | "end_time">;
         Update: Partial<Database["public"]["Tables"]["availability_rules"]["Row"]>;
         Relationships: [];
+      };
+      posts: {
+        Row: {
+          id: string;
+          agency_id: string;
+          client_id: string;
+          task_id: string | null;
+          kind: ApprovalKind;
+          title: string;
+          caption: string;
+          mode: ApprovalMode;
+          status: ApprovalStatus;
+          theme_decision: ApprovalDecision | null;
+          media_decision: ApprovalDecision | null;
+          caption_decision: ApprovalDecision | null;
+          publish_mode: PublishMode;
+          networks: SocialNetwork[];
+          scheduled_at: string | null;
+          round: number;
+          sent_at: string;
+          decided_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["posts"]["Row"]> & Pick<Database["public"]["Tables"]["posts"]["Row"], "agency_id" | "client_id" | "title">;
+        Update: Partial<Database["public"]["Tables"]["posts"]["Row"]>;
+        Relationships: [
+          { foreignKeyName: "posts_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] },
+          { foreignKeyName: "posts_task_id_fkey"; columns: ["task_id"]; isOneToOne: false; referencedRelation: "tasks"; referencedColumns: ["id"] },
+          { foreignKeyName: "posts_created_by_fkey"; columns: ["created_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
+      post_media: {
+        Row: {
+          id: string;
+          agency_id: string;
+          post_id: string;
+          path: string;
+          name: string;
+          size_bytes: number;
+          mime_type: string | null;
+          position: number;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["post_media"]["Row"]> & Pick<Database["public"]["Tables"]["post_media"]["Row"], "agency_id" | "post_id" | "path" | "name">;
+        Update: Partial<Database["public"]["Tables"]["post_media"]["Row"]>;
+        Relationships: [{ foreignKeyName: "post_media_post_id_fkey"; columns: ["post_id"]; isOneToOne: false; referencedRelation: "posts"; referencedColumns: ["id"] }];
+      };
+      approval_events: {
+        Row: {
+          id: string;
+          agency_id: string;
+          post_id: string;
+          actor_id: string | null;
+          actor_side: "equipe" | "cliente";
+          event: "enviado" | "reenviado" | "em_analise" | "decisao";
+          part: ApprovalPart | null;
+          decision: ApprovalDecision | null;
+          round: number;
+          comment: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["approval_events"]["Row"]> & Pick<Database["public"]["Tables"]["approval_events"]["Row"], "agency_id" | "post_id" | "actor_side" | "event">;
+        Update: Partial<Database["public"]["Tables"]["approval_events"]["Row"]>;
+        Relationships: [
+          { foreignKeyName: "approval_events_post_id_fkey"; columns: ["post_id"]; isOneToOne: false; referencedRelation: "posts"; referencedColumns: ["id"] },
+          { foreignKeyName: "approval_events_actor_id_fkey"; columns: ["actor_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
+      caption_templates: {
+        Row: {
+          id: string;
+          agency_id: string;
+          client_id: string | null;
+          title: string;
+          body: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["caption_templates"]["Row"]> & Pick<Database["public"]["Tables"]["caption_templates"]["Row"], "agency_id" | "title" | "body">;
+        Update: Partial<Database["public"]["Tables"]["caption_templates"]["Row"]>;
+        Relationships: [{ foreignKeyName: "caption_templates_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] }];
+      };
+      social_accounts: {
+        Row: {
+          id: string;
+          agency_id: string;
+          client_id: string;
+          network: SocialNetwork;
+          username: string;
+          profile_url: string | null;
+          token_ref: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["social_accounts"]["Row"]> & Pick<Database["public"]["Tables"]["social_accounts"]["Row"], "agency_id" | "client_id" | "network" | "username">;
+        Update: Partial<Database["public"]["Tables"]["social_accounts"]["Row"]>;
+        Relationships: [{ foreignKeyName: "social_accounts_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] }];
+      };
+      social_publications: {
+        Row: {
+          id: string;
+          agency_id: string;
+          client_id: string;
+          post_id: string | null;
+          account_id: string | null;
+          network: SocialNetwork;
+          title: string;
+          caption: string;
+          scheduled_at: string;
+          status: PublicationStatus;
+          published_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["social_publications"]["Row"]> & Pick<Database["public"]["Tables"]["social_publications"]["Row"], "agency_id" | "client_id" | "network" | "title" | "scheduled_at">;
+        Update: Partial<Database["public"]["Tables"]["social_publications"]["Row"]>;
+        Relationships: [
+          { foreignKeyName: "social_publications_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] },
+          { foreignKeyName: "social_publications_post_id_fkey"; columns: ["post_id"]; isOneToOne: false; referencedRelation: "posts"; referencedColumns: ["id"] },
+          { foreignKeyName: "social_publications_account_id_fkey"; columns: ["account_id"]; isOneToOne: false; referencedRelation: "social_accounts"; referencedColumns: ["id"] },
+        ];
       };
       checklist_items: {
         Row: {
@@ -609,8 +741,26 @@ export type Database = {
         Returns: { agency_name: string; email: string; role: AppRole; valid: boolean }[];
       };
       log_access: { Args: { user_agent?: string }; Returns: undefined };
+      client_open_post: { Args: { p: string }; Returns: undefined };
+      client_decide_post: {
+        Args: { p: string; part: ApprovalPart; decision: ApprovalDecision; comment?: string | null };
+        Returns: ApprovalStatus;
+      };
     };
-    Enums: { access_level: AccessLevel; app_role: AppRole; member_status: MemberStatus; client_status: ClientStatus };
+    Enums: {
+      access_level: AccessLevel;
+      app_role: AppRole;
+      member_status: MemberStatus;
+      client_status: ClientStatus;
+      approval_status: ApprovalStatus;
+      approval_mode: ApprovalMode;
+      approval_kind: ApprovalKind;
+      approval_part: ApprovalPart;
+      approval_decision: ApprovalDecision;
+      publish_mode: PublishMode;
+      social_network: SocialNetwork;
+      publication_status: PublicationStatus;
+    };
     CompositeTypes: { [_ in never]: never };
   };
 };
@@ -629,3 +779,14 @@ export type BoardRow = Database["public"]["Tables"]["boards"]["Row"];
 export type ColumnRow = Database["public"]["Tables"]["board_columns"]["Row"];
 export type LabelRow = Database["public"]["Tables"]["labels"]["Row"];
 export type EventRow = Database["public"]["Tables"]["events"]["Row"];
+export type ApprovalStatusT = ApprovalStatus;
+export type ApprovalModeT = ApprovalMode;
+export type ApprovalKindT = ApprovalKind;
+export type ApprovalPartT = ApprovalPart;
+export type ApprovalDecisionT = ApprovalDecision;
+export type PublishModeT = PublishMode;
+export type SocialNetworkT = SocialNetwork;
+export type PublicationStatusT = PublicationStatus;
+export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
+export type PublicationRow = Database["public"]["Tables"]["social_publications"]["Row"];
+export type SocialAccountRow = Database["public"]["Tables"]["social_accounts"]["Row"];

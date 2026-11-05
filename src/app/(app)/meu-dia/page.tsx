@@ -25,7 +25,8 @@ export default async function MeuDiaPage() {
   if (error) return <ErrorState description="Não foi possível carregar o seu dia. Recarregue a página." />;
 
   const agendaAllowed = memberCan(ctx, "agenda");
-  const [events, checklist] = await Promise.all([
+  const approvalsAllowed = memberCan(ctx, "aprovacoes");
+  const [events, checklist, approvals] = await Promise.all([
     agendaAllowed
       ? supabase
           .from("events")
@@ -35,6 +36,16 @@ export default async function MeuDiaPage() {
           .order("starts_at")
       : Promise.resolve({ data: [] }),
     supabase.from("checklist_items").select("id, title, due_date, done_at").eq("user_id", ctx.userId).order("done_at", { nullsFirst: true }).order("position"),
+    // envios que eu fiz e ainda não foram aprovados: aguardando o cliente ou voltaram para ajuste
+    approvalsAllowed
+      ? supabase
+          .from("posts")
+          .select("id, title, status, kind, decided_at, clients(name)")
+          .eq("created_by", ctx.userId)
+          .in("status", ["enviado", "em_analise", "alteracoes", "reprovado"])
+          .order("sent_at", { ascending: false })
+          .limit(30)
+      : Promise.resolve({ data: [] }),
   ]);
 
   const tasks = (mine ?? [])
@@ -71,6 +82,11 @@ export default async function MeuDiaPage() {
       events={myEvents.map((e) => ({ id: e.id, title: e.title, starts_at: e.starts_at, ends_at: e.ends_at, all_day: e.all_day, done: !!e.done_at, location: e.location }))}
       checklist={checklist.data ?? []}
       agendaAllowed={agendaAllowed}
+      approvalsAllowed={approvalsAllowed}
+      approvals={(approvals.data ?? []).map((a) => {
+        const c = Array.isArray(a.clients) ? a.clients[0] : a.clients;
+        return { id: a.id, title: a.title, status: a.status, kind: a.kind, clientName: c?.name ?? "" };
+      })}
     />
   );
 }

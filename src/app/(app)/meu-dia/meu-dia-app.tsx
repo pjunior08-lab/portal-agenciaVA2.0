@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 import { addDays, shortDate, timeOf, today, weekdayDate } from "@/lib/dates";
 import { PRIORITIES } from "@/features/demandas/schemas";
 import { addChecklistItem, deleteChecklistItem, toggleChecklistItem } from "@/features/agenda/actions";
+import { needsWork } from "@/features/aprovacoes/schemas";
+import { ApprovalStatusBadge } from "@/features/aprovacoes/ui";
+import type { ApprovalStatusT } from "@/lib/supabase/database.types";
 
 interface MyTask {
   id: string;
@@ -31,9 +34,11 @@ interface Props {
   events: { id: string; title: string; starts_at: string; ends_at: string; all_day: boolean; done: boolean; location: string | null }[];
   checklist: { id: string; title: string; due_date: string | null; done_at: string | null }[];
   agendaAllowed: boolean;
+  approvalsAllowed: boolean;
+  approvals: { id: string; title: string; status: ApprovalStatusT; kind: "post" | "demanda"; clientName: string }[];
 }
 
-export function MeuDiaApp({ name, tasks, events, checklist, agendaAllowed }: Props) {
+export function MeuDiaApp({ name, tasks, events, checklist, agendaAllowed, approvalsAllowed, approvals }: Props) {
   const now = today();
   const [period, setPeriod] = useState<"hoje" | "semana">("hoje");
   const [q, setQ] = useState("");
@@ -169,8 +174,33 @@ export function MeuDiaApp({ name, tasks, events, checklist, agendaAllowed }: Pro
             )}
           </SectionCard>
           <Checklist items={checklist} />
-          <SectionCard title="Aprovações" icon={ClipboardCheck}>
-            <p className="text-xs text-muted">Chega com o módulo de Aprovação (Fase 4).</p>
+          <SectionCard
+            title="Aprovações"
+            icon={ClipboardCheck}
+            description="Seus envios ainda não aprovados."
+            action={approvalsAllowed && <Link href="/aprovacoes" className="text-xs underline-offset-2 hover:underline">Abrir</Link>}
+          >
+            {!approvalsAllowed ? (
+              <p className="text-xs text-muted">Você não tem acesso à Aprovação.</p>
+            ) : approvals.length === 0 ? (
+              <p className="text-xs text-muted">Nada aguardando.</p>
+            ) : (
+              <ul className="flex flex-col gap-1.5">
+                {[...approvals]
+                  .sort((a, b) => Number(needsWork(b.status)) - Number(needsWork(a.status)))
+                  .map((a) => (
+                    <li key={a.id}>
+                      <Link href={`/aprovacoes?envio=${a.id}`} className="flex flex-col gap-1 rounded-xl bg-surface-2 px-3 py-2 text-xs hover:bg-surface-3">
+                        <span className="truncate font-medium">{a.title}</span>
+                        <span className="flex items-center justify-between gap-2">
+                          <span className="truncate text-muted">{a.clientName}</span>
+                          <ApprovalStatusBadge status={a.status} />
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+              </ul>
+            )}
           </SectionCard>
         </div>
       </div>
