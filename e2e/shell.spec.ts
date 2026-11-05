@@ -36,7 +36,8 @@ test.describe("sem login", () => {
     await page.getByLabel("E-mail").fill("ninguem@exemplo.com.br");
     await page.getByLabel("Senha").fill("senha-errada-123");
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(page.getByRole("alert")).toContainText(/incorretos|tentativas/);
+    // o Next.js tem um aviso invisível próprio (role="alert"); procuramos só o do formulário
+    await expect(page.getByRole("main").getByRole("alert")).toContainText(/incorretos|tentativas/);
   });
 
   test("convite inválido é recusado", async ({ page }) => {
@@ -51,7 +52,8 @@ test.describe("sem login", () => {
 
   test("página de cadastro abre", async ({ page }) => {
     await page.goto("/cadastro");
-    await expect(page.getByRole("heading").first()).toBeVisible();
+    // sem agência: formulário de criação; com agência: aviso de que já existe
+    await expect(page.getByRole("heading", { level: 1, name: /Criar a agência|A agência já está criada/ })).toBeVisible();
   });
 });
 
