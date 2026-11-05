@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vai Aonde Capixaba? — Sistema de gestão da agência
 
-## Getting Started
+Sistema web interno da agência: clientes, demandas, aprovação de posts, agenda, propostas, contratos, financeiro, CRM e comunicação.
 
-First, run the development server:
+**Pilha:** Next.js (App Router) · TypeScript · Tailwind CSS v4 · Supabase (Postgres, Auth, Storage, Realtime) · Netlify · GitHub Actions.
+
+## Rodar localmente
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # preencha a URL e a chave pública do Supabase
+npm install
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sem `.env.local` o app abre normalmente; só as partes que usam o banco (a partir da Fase 1) ficam indisponíveis.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Comandos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Comando | O que faz |
+| --- | --- |
+| `npm run dev` | servidor de desenvolvimento |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | checagem de tipos |
+| `npm test` | testes de unidade (Vitest) |
+| `npm run build && npm run test:e2e` | testes de fluxo (Playwright, desktop e celular) |
 
-## Learn More
+## Estrutura
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/app/(app)/            telas do sistema (com barra lateral)
+src/app/(app)/[modulo]    página provisória de cada módulo ainda não implementado
+src/app/(app)/componentes vitrine interna dos componentes (aprovação visual)
+src/components/ui         componentes reutilizáveis
+src/components/shell      barra lateral, menu no celular, cabeçalho, tema
+src/lib/navigation.ts     lista de módulos, grupos do menu e fase de cada um
+src/lib/supabase          clientes do Supabase (navegador e servidor)
+e2e/                      testes de fluxo
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Segurança
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Só a URL e a chave **pública** do Supabase vão ao navegador. A chave secreta fica apenas no servidor (variável `SUPABASE_SECRET_KEY` no Netlify, nunca com prefixo `NEXT_PUBLIC_`).
+- Todo acesso a dados passa por políticas RLS no banco.
+- `.env.local` nunca é versionado.
 
-## Deploy on Vercel
+## Fases
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+0. Fundação ✅ · 1. Autenticação e núcleo · 2. Clientes e Portal · 3. Demandas, Agenda e Meu Dia · 4. Aprovação e Social · 5. Propostas e Contratos · 6. Financeiro · 7. Comercial · 8. Comunicação, Mapa Mental, Funil e Início · 9. Integrações e módulos a levantar.

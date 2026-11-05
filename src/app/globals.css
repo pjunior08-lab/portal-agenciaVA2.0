@@ -1,26 +1,122 @@
 @import "tailwindcss";
 
+/* Tema escuro controlado por classe (next-themes coloca .dark no <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Tokens de design — Vai Aonde Capixaba?
+ * Toda cor da interface vem daqui. Para mudar a marca, altere só estes valores.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f0f0f2;
+  --surface: #ffffff;
+  --surface-2: #f5f5f7;
+  --surface-3: #e9e9ed;
+  --ink: #18181b;
+  --muted: #63636b;
+  --muted-2: #8e8e96;
+  --border: #e2e2e6;
+  --border-2: #d1d1d6;
+  --panel: #16171b;
+  --panel-2: #24252c;
+  --panel-ink: #fafafa;
+  --panel-muted: #a5a9b3;
+  --brand: #feb800;
+  --brand-strong: #e5a500;
+  --brand-soft: #fff4d6;
+  --brand-ink: #111111;
+  --danger: #d0342c;
+  --danger-soft: #fdecea;
+  --success: #1f9d55;
+  --success-soft: #e6f6ec;
+  --info: #2f7be5;
+  --info-soft: #e8f1fd;
+  --warning: #c98500;
+  --ring: #feb800;
+}
+
+.dark {
+  --bg: #0a0a0a;
+  --surface: #141416;
+  --surface-2: #1c1c20;
+  --surface-3: #26262b;
+  --ink: #f5f5f5;
+  --muted: #a1a1aa;
+  --muted-2: #7a7a82;
+  --border: #2a2a2e;
+  --border-2: #3a3a3f;
+  --panel: #1f2026;
+  --panel-2: #2a2b33;
+  --panel-ink: #fafafa;
+  --panel-muted: #a5a9b3;
+  --brand: #feb800;
+  --brand-strong: #ffc933;
+  --brand-soft: #3a2c05;
+  --brand-ink: #111111;
+  --danger: #e14b4b;
+  --danger-soft: #3a1414;
+  --success: #2fb36a;
+  --success-soft: #0f2a1b;
+  --info: #4c90ee;
+  --info-soft: #11223b;
+  --warning: #eda100;
+  --ring: #feb800;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-line: var(--border);
+  --color-line-2: var(--border-2);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-panel-ink: var(--panel-ink);
+  --color-panel-muted: var(--panel-muted);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-warning: var(--warning);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-card: 1rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Estado vazio listrado usado em colunas de kanban */
+.stripes {
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 6px,
+    color-mix(in srgb, var(--muted) 12%, transparent) 6px 7px
+  );
 }
