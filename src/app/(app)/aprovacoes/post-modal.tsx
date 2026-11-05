@@ -233,7 +233,13 @@ export function PostModal({ post, kind, agencyId, clients, templates, tasks, por
               </Field>
             </div>
 
-            <Field label={isPost ? "Tema" : "Título"} htmlFor="ap-title" required error={errors.title?.message}>
+            <Field
+              label={isPost ? "Tema" : "Título"}
+              htmlFor="ap-title"
+              required
+              error={errors.title?.message}
+              hint={isPost && mode === "detalhada" ? "Aprovado separadamente pelo cliente." : undefined}
+            >
               <Input id="ap-title" autoFocus={!post} {...register("title")} />
             </Field>
 
@@ -244,6 +250,7 @@ export function PostModal({ post, kind, agencyId, clients, templates, tasks, por
               hint={
                 isPost ? (
                   <span className={cn(caption.length > INSTAGRAM_LIMIT && "text-danger")}>
+                    {mode === "detalhada" && "Aprovada separadamente pelo cliente · "}
                     {caption.length} / {CAPTION_LIMIT} {caption.length > INSTAGRAM_LIMIT && "· passa do limite do Instagram (2.200)"}
                   </span>
                 ) : undefined
@@ -280,6 +287,29 @@ export function PostModal({ post, kind, agencyId, clients, templates, tasks, por
                       { value: "detalhada", label: "Detalhada: tema, mídias e legenda" },
                     ]}
                   />
+                  {/* a forma muda o que o cliente vê no portal; aqui mostramos como vai ser */}
+                  <div className="rounded-xl bg-surface-2 p-3 text-xs" aria-live="polite">
+                    {mode === "rapida" ? (
+                      <>
+                        <p className="font-medium">O cliente decide o post inteiro de uma vez.</p>
+                        <p className="mt-1 text-muted">No portal aparecem os botões Aprovar, Pedir alterações e Reprovar para o post todo.</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-medium">O cliente decide cada parte separadamente:</p>
+                        <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                          {(["Tema", "Mídias", "Legenda"] as const).map((x) => (
+                            <li key={x} className="rounded-full bg-brand-soft px-2.5 py-0.5">
+                              {x}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="mt-1.5 text-muted">
+                          O resultado sai quando as três forem decididas: uma reprovada reprova o post; uma com alteração pede ajuste.
+                        </p>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <fieldset>
                   <legend className="mb-1.5 text-xs font-medium text-muted">Redes</legend>
@@ -332,7 +362,10 @@ export function PostModal({ post, kind, agencyId, clients, templates, tasks, por
 
           <section aria-label={isPost ? "Mídias" : "Anexos"} className="flex flex-col gap-2 border-t border-line pt-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">{isPost ? "Mídias" : "Anexos"}</h3>
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
+                {isPost ? "Mídias" : "Anexos"}
+                {isPost && mode === "detalhada" && <Badge tone="brand">Aprovada separadamente</Badge>}
+              </h3>
               {canEdit && (
                 <>
                   <input
