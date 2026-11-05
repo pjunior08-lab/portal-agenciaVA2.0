@@ -33,6 +33,12 @@ insert into public.posts (id, agency_id, client_id, title, caption, mode, publis
   ('00000000-0000-0000-0000-0000000bb001','00000000-0000-0000-0000-00000000a9e4','00000000-0000-0000-0000-0000000c1e04','Post rápido','Legenda', 'rapida','automatica', array['instagram']::public.social_network[], now() + interval '2 days','00000000-0000-0000-0000-0000000000c4','aprovado'),
   ('00000000-0000-0000-0000-0000000bb002','00000000-0000-0000-0000-00000000a9e4','00000000-0000-0000-0000-0000000c1e04','Post detalhado','Legenda', 'detalhada','manual', '{}', null,'00000000-0000-0000-0000-0000000000c4','enviado'),
   ('00000000-0000-0000-0000-0000000bb003','00000000-0000-0000-0000-00000000a9e4','00000000-0000-0000-0000-0000000c1e05','Post de outro cliente','', 'rapida','manual', '{}', null,'00000000-0000-0000-0000-0000000000c4','enviado');
+with ins as (
+  insert into public.posts (agency_id, client_id, title, created_by) values
+    ('00000000-0000-0000-0000-00000000a9e4','00000000-0000-0000-0000-0000000c1e04','Com retorno','00000000-0000-0000-0000-0000000000c4')
+  returning id)
+insert into r select 'criar envio com retorno (como o site faz)', count(*) = 1 from ins;
+delete from public.posts where title = 'Com retorno';
 insert into r select 'envio nasce como "enviado" mesmo se pedir outro status', status = 'enviado' from public.posts where id = '00000000-0000-0000-0000-0000000bb001';
 do $$ begin
   update public.posts set status = 'aprovado' where id = '00000000-0000-0000-0000-0000000bb002';

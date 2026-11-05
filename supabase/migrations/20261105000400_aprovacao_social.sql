@@ -330,7 +330,14 @@ alter table public.social_publications enable row level security;
 revoke all on public.posts, public.post_media, public.approval_events, public.caption_templates,
   public.social_accounts, public.social_publications from anon;
 
-create policy posts_select on public.posts for select to authenticated using (private.can_see_post(id));
+-- usa as colunas da própria linha (e não can_see_post): no INSERT ... RETURNING a linha nova
+-- ainda não aparece para uma busca na tabela
+create policy posts_select on public.posts for select to authenticated
+  using (
+    (private.is_member(agency_id) and (private.can_access(agency_id, 'aprovacoes', 'ver') or created_by = (select auth.uid())))
+    or private.portal_section(client_id, 'aprovacoes')
+    or (status = 'aprovado' and private.portal_section(client_id, 'calendario'))
+  );
 create policy posts_insert on public.posts for insert to authenticated
   with check (private.can_access(agency_id, 'aprovacoes', 'editar') and created_by = (select auth.uid()));
 create policy posts_update on public.posts for update to authenticated
