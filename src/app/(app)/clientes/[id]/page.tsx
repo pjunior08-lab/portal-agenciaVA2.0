@@ -13,6 +13,7 @@ import { ClientActions } from "./client-actions";
 import { Overview } from "./overview";
 import { NotesPanel } from "./notes-panel";
 import { FilesPanel } from "./files-panel";
+import { DocumentsPanel, type ClientDocument } from "./documents-panel";
 import { StrategyPanel } from "./strategy-panel";
 import { PortalPanel } from "./portal-panel";
 
@@ -71,7 +72,9 @@ export default async function ClientePage({
     case "anotacoes": {
       const { data } = await supabase
         .from("client_notes")
-        .select("id, body, shared_with_client, created_at, author:profiles!client_notes_author_id_fkey(full_name)")
+        .select(
+          "id, body, shared_with_client, created_at, author:profiles!client_notes_author_id_fkey(full_name)",
+        )
         .eq("client_id", id)
         .order("created_at", { ascending: false });
       body = (
@@ -95,22 +98,79 @@ export default async function ClientePage({
         .select("id, name, path, size_bytes, mime_type, shared_with_client, created_at")
         .eq("client_id", id)
         .order("created_at", { ascending: false });
-      const urls = await signedUrls("clientes", (data ?? []).map((f) => f.path));
+      const urls = await signedUrls(
+        "clientes",
+        (data ?? []).map((f) => f.path),
+      );
+      // contratos e propostas do cliente entram sozinhos (conforme o acesso de quem vê)
+      const showContracts = memberCan(ctx, "contratos");
+      const showProposals = memberCan(ctx, "propostas");
+      const [contracts, proposals] = await Promise.all([
+        showContracts
+          ? supabase
+              .from("contracts")
+              .select("id, title, status, created_at, sent_at, signed_at")
+              .eq("client_id", id)
+              .order("created_at", { ascending: false })
+          : Promise.resolve({ data: [] }),
+        showProposals
+          ? supabase
+              .from("proposals")
+              .select("id, number, title, status, created_at, sent_at, decided_at")
+              .eq("client_id", id)
+              .order("created_at", { ascending: false })
+          : Promise.resolve({ data: [] }),
+      ]);
+      const documents: ClientDocument[] = [
+        ...(contracts.data ?? []).map((c) => ({
+          kind: "contrato" as const,
+          id: c.id,
+          title: c.title,
+          status: c.status,
+          date: c.signed_at ?? c.sent_at ?? c.created_at,
+          dateLabel: c.signed_at ? "assinado em" : c.sent_at ? "enviado em" : "criado em",
+        })),
+        ...(proposals.data ?? []).map((p) => ({
+          kind: "proposta" as const,
+          id: p.id,
+          title: `Nº ${p.number} · ${p.title}`,
+          status: p.status,
+          date: p.decided_at ?? p.sent_at ?? p.created_at,
+          dateLabel: p.decided_at
+            ? p.status === "aceita"
+              ? "aceita em"
+              : "respondida em"
+            : p.sent_at
+              ? "enviada em"
+              : "criada em",
+        })),
+      ].sort((a, b) => b.date.localeCompare(a.date));
       body = (
-        <FilesPanel
-          clientId={id}
-          agencyId={client.agency_id}
-          canEdit={canEdit}
-          files={(data ?? []).map((f) => ({
-            id: f.id,
-            name: f.name,
-            size: f.size_bytes,
-            mime: f.mime_type,
-            shared: f.shared_with_client,
-            createdAt: f.created_at,
-            url: urls[f.path] ?? null,
-          }))}
-        />
+        <div className="flex flex-col gap-4">
+          {(showContracts || showProposals) && (
+            <DocumentsPanel
+              clientId={id}
+              documents={documents}
+              canCreateContract={memberCan(ctx, "contratos", "editar")}
+              showContracts={showContracts}
+              showProposals={showProposals}
+            />
+          )}
+          <FilesPanel
+            clientId={id}
+            agencyId={client.agency_id}
+            canEdit={canEdit}
+            files={(data ?? []).map((f) => ({
+              id: f.id,
+              name: f.name,
+              size: f.size_bytes,
+              mime: f.mime_type,
+              shared: f.shared_with_client,
+              createdAt: f.created_at,
+              url: urls[f.path] ?? null,
+            }))}
+          />
+        </div>
       );
       break;
     }
@@ -143,7 +203,12 @@ export default async function ClientePage({
           portal={portal}
           users={(users ?? []).map((u) => {
             const p = Array.isArray(u.profile) ? u.profile[0] : u.profile;
-            return { userId: u.user_id, status: u.status, name: p?.full_name || p?.email || "Cliente", email: p?.email ?? "" };
+            return {
+              userId: u.user_id,
+              status: u.status,
+              name: p?.full_name || p?.email || "Cliente",
+              email: p?.email ?? "",
+            };
           })}
           invites={invites ?? []}
         />
@@ -164,7 +229,10 @@ export default async function ClientePage({
 
   return (
     <>
-      <Link href="/clientes" className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink">
+      <Link
+        href="/clientes"
+        className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink"
+      >
         <ArrowLeft className="size-3.5" aria-hidden /> Clientes
       </Link>
 
@@ -196,7 +264,10 @@ export default async function ClientePage({
         </div>
       </header>
 
-      <nav aria-label="Seções do cliente" className="mb-5 flex gap-1 overflow-x-auto rounded-full bg-surface p-1">
+      <nav
+        aria-label="Seções do cliente"
+        className="mb-5 flex gap-1 overflow-x-auto rounded-full bg-surface p-1"
+      >
         {TABS.map((t) => (
           <Link
             key={t.id}
@@ -204,7 +275,11 @@ export default async function ClientePage({
             aria-current={tab.id === t.id ? "page" : undefined}
             className={cn(
               "inline-flex h-7 shrink-0 items-center rounded-full px-3 text-xs font-medium whitespace-nowrap transition-colors",
-              tab.id === t.id ? "bg-brand text-brand-ink" : "phase" in t ? "text-muted-2 hover:text-ink" : "text-muted hover:text-ink",
+              tab.id === t.id
+                ? "bg-brand text-brand-ink"
+                : "phase" in t
+                  ? "text-muted-2 hover:text-ink"
+                  : "text-muted hover:text-ink",
             )}
           >
             {t.label}
