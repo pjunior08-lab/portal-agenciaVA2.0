@@ -17,11 +17,27 @@ export interface MemberContext {
   access: Record<string, AccessLevelT>;
 }
 
-/** Usuário logado (ou null). Valida o token com o Supabase a cada requisição. */
-export const getUser = cache(async () => {
+export interface SessionUser {
+  id: string;
+  email: string | undefined;
+  user_metadata: Record<string, unknown>;
+}
+
+/**
+ * Usuário logado (ou null), a partir do token de sessão com a assinatura verificada
+ * (getClaims). Com chaves de assinatura assimétricas a verificação é local, sem ida
+ * ao servidor de autenticação; o banco confere o mesmo token em cada consulta (RLS).
+ */
+export const getUser = cache(async (): Promise<SessionUser | null> => {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  return data.user;
+  const { data } = await supabase.auth.getClaims();
+  const c = data?.claims;
+  if (!c?.sub) return null;
+  return {
+    id: c.sub,
+    email: typeof c.email === "string" ? c.email : undefined,
+    user_metadata: (c.user_metadata as Record<string, unknown> | undefined) ?? {},
+  };
 });
 
 /** Contexto completo do membro: perfil, agência, papel e acessos. Null se não for membro ativo. */
@@ -30,19 +46,14 @@ export const getMemberContext = cache(async (): Promise<MemberContext | null> =>
   if (!user) return null;
   const supabase = await createClient();
 
-  const { data: membership } = await supabase
-    .from("agency_members")
-    .select("agency_id, role, status")
-    .eq("user_id", user.id)
-    .eq("status", "ativo")
-    .maybeSingle();
-  if (!membership) return null;
-
-  const [{ data: profile }, { data: agency }, { data: accessRows }] = await Promise.all([
+  // uma ida ao banco: vínculo + agência, perfil e acessos em paralelo
+  const [{ data: membership }, { data: profile }, { data: accessRows }] = await Promise.all([
+    supabase.from("agency_members").select("agency_id, role, status, agencies(*)").eq("user_id", user.id).eq("status", "ativo").maybeSingle(),
     supabase.from("profiles").select("*").eq("id", user.id).single(),
-    supabase.from("agencies").select("*").eq("id", membership.agency_id).single(),
-    supabase.from("member_module_access").select("module, level").eq("user_id", user.id),
+    supabase.from("member_module_access").select("module, level, agency_id").eq("user_id", user.id),
   ]);
+  if (!membership) return null;
+  const agency = Array.isArray(membership.agencies) ? membership.agencies[0] : membership.agencies;
   if (!profile || !agency) return null;
 
   return {
@@ -51,7 +62,7 @@ export const getMemberContext = cache(async (): Promise<MemberContext | null> =>
     profile,
     agency,
     role: membership.role,
-    access: Object.fromEntries((accessRows ?? []).map((r) => [r.module, r.level])),
+    access: Object.fromEntries((accessRows ?? []).filter((r) => r.agency_id === membership.agency_id).map((r) => [r.module, r.level])),
   };
 });
 

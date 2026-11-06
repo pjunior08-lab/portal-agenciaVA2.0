@@ -32,9 +32,9 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // verifica a assinatura do token de sessão (local com chaves assimétricas) e renova se preciso
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims?.sub ? data.claims : null;
   const path = request.nextUrl.pathname;
 
   const redirectTo = (to: string, keepNext = false) => {
