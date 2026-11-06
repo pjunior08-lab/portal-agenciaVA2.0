@@ -9,3 +9,4 @@ export * from "./menu";
 export * from "./controls";
 export * from "./month-calendar";
 export * from "./media-thumb";
+export * from "./rich-text-editor";

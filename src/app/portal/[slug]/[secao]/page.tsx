@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CalendarDays, Clock, Download, FileText, Loader, StickyNote } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, Clock, Download, FileSignature, FileText, Loader, StickyNote } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { signedUrls } from "@/lib/storage";
 import { getPortal } from "@/features/portal/context";
 import { PORTAL_SECTIONS } from "@/features/clientes/schemas";
 import { Badge, EmptyState, ErrorState, SectionCard } from "@/components/ui";
-import { shortDate } from "@/lib/dates";
+import { dayOf, shortDate } from "@/lib/dates";
 import { NETWORKS } from "@/features/aprovacoes/schemas";
+import { cleanHtml } from "@/lib/html";
+import { formatBRL } from "@/lib/utils";
+import { CADENCES, investment } from "@/features/propostas/schemas";
+import { CONTRACT_STATUS, fmtDay } from "@/features/contratos/schemas";
+import { ContractSheet } from "@/features/contratos/document";
 import { PortalApprovals, type PortalPost } from "./approvals";
 import { PortalCalendar } from "./calendar";
 import { formatBytes } from "@/lib/utils";
@@ -94,6 +99,96 @@ export default async function PortalSection({
         .map((e) => ({ ...e, actorName: e.actor_side === "cliente" ? "Você" : "Agência" })),
     }));
     return <PortalApprovals slug={slug} posts={posts} openId={envio ?? null} viewer={p.viewer} />;
+  }
+
+  if (section.id === "servicos") {
+    const [contracts, proposals] = await Promise.all([
+      supabase
+        .from("contracts")
+        .select("id, title, status, value, starts_on, ends_on, renewal_on, rendered_html, header_text, footer_text, watermark, document_hash, signed_at")
+        .eq("client_id", p.clientId)
+        .in("status", ["aguardando", "assinado"])
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("proposals")
+        .select("id, number, title, decided_at, proposal_items(service, quantity, unit_price, cadence, position)")
+        .eq("client_id", p.clientId)
+        .eq("status", "aceita")
+        .order("decided_at", { ascending: false }),
+    ]);
+    if (contracts.error || proposals.error) return <ErrorState description="Não foi possível carregar seus serviços." />;
+    const none = !contracts.data?.length && !proposals.data?.length;
+    return (
+      <div className="flex flex-col gap-4">
+        {none && (
+          <SectionCard title="Serviços" icon={BriefcaseBusiness}>
+            <EmptyState icon={BriefcaseBusiness} title="Nada por aqui ainda" description="Seus contratos e propostas aceitas aparecem aqui." />
+          </SectionCard>
+        )}
+        {!!proposals.data?.length && (
+          <SectionCard title="Serviços contratados" icon={BriefcaseBusiness} description="Das propostas que você aceitou.">
+            <ul className="flex flex-col gap-3">
+              {proposals.data.map((pr) => {
+                const items = [...(pr.proposal_items ?? [])].sort((a, b) => a.position - b.position);
+                return (
+                  <li key={pr.id} className="rounded-xl bg-surface-2 p-4">
+                    <p className="text-[11px] text-muted">Proposta nº {pr.number}</p>
+                    <p className="font-medium">{pr.title}</p>
+                    <ul className="mt-2 flex flex-col gap-1 text-sm">
+                      {items.map((i, n) => (
+                        <li key={n} className="flex justify-between gap-3">
+                          <span>{i.service}</span>
+                          <span className="text-muted tabular-nums">
+                            {formatBRL(Math.round(Number(i.quantity) * Number(i.unit_price) * 100) / 100)}
+                            {CADENCES[i.cadence].suffix}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-xs text-muted">
+                      Total: {investment(items).map((t) => `${formatBRL(t.total)}${CADENCES[t.cadence].suffix}`).join(" + ")}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          </SectionCard>
+        )}
+        {!!contracts.data?.length && (
+          <SectionCard title="Contratos" icon={FileSignature}>
+            <ul className="flex flex-col gap-3">
+              {contracts.data.map((ct) => (
+                <li key={ct.id} className="rounded-xl bg-surface-2 p-4">
+                  <details>
+                    <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2">
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-medium">{ct.title}</span>
+                        <span className="block text-xs text-muted">
+                          {ct.starts_on ? `${fmtDay(ct.starts_on)} a ${ct.ends_on ? fmtDay(ct.ends_on) : "prazo indeterminado"}` : "Vigência a definir"}
+                          {ct.value != null && ` · ${formatBRL(ct.value)}`}
+                        </span>
+                      </span>
+                      <Badge tone={CONTRACT_STATUS[ct.status].tone}>{CONTRACT_STATUS[ct.status].label}</Badge>
+                      <span className="text-xs text-muted underline-offset-2 hover:underline">Ver contrato</span>
+                    </summary>
+                    <div className="mt-3 flex flex-col gap-3">
+                      <ContractSheet html={cleanHtml(ct.rendered_html)} header={ct.header_text} footer={ct.footer_text} watermark={ct.watermark} />
+                      <p className="text-[11px] break-all text-muted">
+                        {ct.signed_at ? `Assinado pelas duas partes em ${fmtDay(dayOf(ct.signed_at))}. ` : ""}
+                        Código do documento (SHA-256): <span className="font-mono">{ct.document_hash}</span>
+                      </p>
+                      {ct.status === "aguardando" && (
+                        <p className="text-xs text-muted">Para assinar, use o link de assinatura que a agência enviou.</p>
+                      )}
+                    </div>
+                  </details>
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        )}
+      </div>
+    );
   }
 
   if (section.id === "calendario") {

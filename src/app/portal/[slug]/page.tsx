@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 export const metadata: Metadata = { title: "Portal" };
 
 /** Fase atual do sistema: seções de fases posteriores mostram "em breve". */
-const CURRENT_PHASE = 4;
+const CURRENT_PHASE = 5;
 
 export default async function PortalHome({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

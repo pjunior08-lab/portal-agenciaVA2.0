@@ -169,6 +169,7 @@ export const MODULES: ModuleDef[] = [
       "Indicadores de propostas",
       "Modelos próprios",
       "Itens, investimento, condições de pagamento e observações",
+      "Link do cliente com aceite ou recusa",
     ],
   },
   {
@@ -180,9 +181,9 @@ export const MODULES: ModuleDef[] = [
     status: "confirmado",
     summary: "Contratos a partir de modelos, com assinatura eletrônica.",
     features: [
-      "Modelos com variáveis, cabeçalho e rodapé",
+      "Modelos com variáveis, cabeçalho, rodapé e marca d'água",
       "Pré-visualização do contrato digital",
-      "Assinatura das duas partes",
+      "Assinatura eletrônica das duas partes pelo link (cliente) e no sistema (administrador)",
     ],
   },
   {

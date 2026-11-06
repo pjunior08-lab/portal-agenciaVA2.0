@@ -18,6 +18,10 @@ type ApprovalDecision = "aprovado" | "alteracoes" | "reprovado";
 type PublishMode = "manual" | "automatica";
 type SocialNetwork = "instagram" | "facebook" | "tiktok" | "youtube" | "linkedin";
 type PublicationStatus = "agendado" | "publicado" | "cancelado";
+type ProposalStatus = "rascunho" | "enviada" | "em_negociacao" | "aceita" | "recusada";
+type ItemCadence = "unica" | "mensal" | "trimestral" | "semestral" | "anual";
+type ContractStatus = "rascunho" | "aguardando" | "assinado" | "cancelado";
+type SignerParty = "contratante" | "contratada";
 
 export type Database = {
   __InternalSupabase: { PostgrestVersion: "14.18" };
@@ -331,6 +335,149 @@ export type Database = {
           { foreignKeyName: "social_publications_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] },
           { foreignKeyName: "social_publications_post_id_fkey"; columns: ["post_id"]; isOneToOne: false; referencedRelation: "posts"; referencedColumns: ["id"] },
           { foreignKeyName: "social_publications_account_id_fkey"; columns: ["account_id"]; isOneToOne: false; referencedRelation: "social_accounts"; referencedColumns: ["id"] },
+        ];
+      };
+      proposal_templates: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          title: string;
+          cover: string;
+          items: Json;
+          payment: Json;
+          notes: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["proposal_templates"]["Row"]> & Pick<Database["public"]["Tables"]["proposal_templates"]["Row"], "agency_id" | "name">;
+        Update: Partial<Database["public"]["Tables"]["proposal_templates"]["Row"]>;
+        Relationships: [];
+      };
+      proposals: {
+        Row: {
+          id: string;
+          agency_id: string;
+          number: string;
+          title: string;
+          template_id: string | null;
+          cover: string;
+          status: ProposalStatus;
+          valid_until: string | null;
+          client_id: string | null;
+          contact_name: string | null;
+          contact_email: string | null;
+          contact_phone: string | null;
+          payment: Json;
+          notes: string;
+          share_token_hash: string | null;
+          sent_at: string | null;
+          decided_at: string | null;
+          decision_name: string | null;
+          decision_comment: string | null;
+          decision_ip: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["proposals"]["Row"]> & Pick<Database["public"]["Tables"]["proposals"]["Row"], "agency_id" | "title">;
+        Update: Partial<Database["public"]["Tables"]["proposals"]["Row"]>;
+        Relationships: [
+          { foreignKeyName: "proposals_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] },
+        ];
+      };
+      proposal_items: {
+        Row: {
+          id: string;
+          agency_id: string;
+          proposal_id: string;
+          position: number;
+          service: string;
+          quantity: number;
+          unit_price: number;
+          cadence: ItemCadence;
+          scope_html: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["proposal_items"]["Row"]> & Pick<Database["public"]["Tables"]["proposal_items"]["Row"], "agency_id" | "proposal_id" | "service">;
+        Update: Partial<Database["public"]["Tables"]["proposal_items"]["Row"]>;
+        Relationships: [
+          { foreignKeyName: "proposal_items_proposal_id_fkey"; columns: ["proposal_id"]; isOneToOne: false; referencedRelation: "proposals"; referencedColumns: ["id"] },
+        ];
+      };
+      contract_templates: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          description: string;
+          body_html: string;
+          header_text: string;
+          footer_text: string;
+          watermark: string;
+          is_default: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["contract_templates"]["Row"]> & Pick<Database["public"]["Tables"]["contract_templates"]["Row"], "agency_id" | "name">;
+        Update: Partial<Database["public"]["Tables"]["contract_templates"]["Row"]>;
+        Relationships: [];
+      };
+      contracts: {
+        Row: {
+          id: string;
+          agency_id: string;
+          title: string;
+          template_id: string | null;
+          proposal_id: string | null;
+          client_id: string;
+          service_description: string;
+          body_html: string;
+          header_text: string;
+          footer_text: string;
+          watermark: string;
+          value: number | null;
+          starts_on: string | null;
+          ends_on: string | null;
+          renewal_on: string | null;
+          status: ContractStatus;
+          rendered_html: string | null;
+          document_hash: string | null;
+          share_token_hash: string | null;
+          sent_at: string | null;
+          signed_at: string | null;
+          cancelled_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["contracts"]["Row"]> & Pick<Database["public"]["Tables"]["contracts"]["Row"], "agency_id" | "title" | "client_id">;
+        Update: Partial<Database["public"]["Tables"]["contracts"]["Row"]>;
+        Relationships: [
+          { foreignKeyName: "contracts_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] },
+          { foreignKeyName: "contracts_proposal_id_fkey"; columns: ["proposal_id"]; isOneToOne: false; referencedRelation: "proposals"; referencedColumns: ["id"] },
+        ];
+      };
+      contract_signatures: {
+        Row: {
+          id: string;
+          agency_id: string;
+          contract_id: string;
+          party: SignerParty;
+          signer_name: string;
+          signer_document: string;
+          signer_email: string | null;
+          user_id: string | null;
+          ip: string | null;
+          user_agent: string | null;
+          document_hash: string;
+          signed_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["contract_signatures"]["Row"]> & Pick<Database["public"]["Tables"]["contract_signatures"]["Row"], "agency_id" | "contract_id" | "party" | "signer_name" | "signer_document" | "document_hash">;
+        Update: Partial<Database["public"]["Tables"]["contract_signatures"]["Row"]>;
+        Relationships: [
+          { foreignKeyName: "contract_signatures_contract_id_fkey"; columns: ["contract_id"]; isOneToOne: false; referencedRelation: "contracts"; referencedColumns: ["id"] },
         ];
       };
       checklist_items: {
@@ -742,6 +889,29 @@ export type Database = {
       };
       log_access: { Args: { user_agent?: string }; Returns: undefined };
       client_open_post: { Args: { p: string }; Returns: undefined };
+      share_proposal: { Args: { p: string }; Returns: string };
+      public_proposal: { Args: { token: string }; Returns: Json };
+      public_proposal_decide: {
+        Args: { token: string; decision: ProposalStatus; signer_name: string; comment?: string | null; ip?: string | null };
+        Returns: ProposalStatus;
+      };
+      send_contract: { Args: { c: string; rendered: string }; Returns: string };
+      sign_contract_as_agency: {
+        Args: { c: string; signer_name: string; signer_document: string; ip?: string | null; user_agent?: string | null };
+        Returns: ContractStatus;
+      };
+      public_contract: { Args: { token: string }; Returns: Json };
+      public_contract_sign: {
+        Args: {
+          token: string;
+          signer_name: string;
+          signer_document: string;
+          signer_email?: string | null;
+          ip?: string | null;
+          user_agent?: string | null;
+        };
+        Returns: ContractStatus;
+      };
       client_decide_post: {
         Args: { p: string; part: ApprovalPart; decision: ApprovalDecision; comment?: string | null };
         Returns: ApprovalStatus;
@@ -760,6 +930,10 @@ export type Database = {
       publish_mode: PublishMode;
       social_network: SocialNetwork;
       publication_status: PublicationStatus;
+      proposal_status: ProposalStatus;
+      item_cadence: ItemCadence;
+      contract_status: ContractStatus;
+      signer_party: SignerParty;
     };
     CompositeTypes: { [_ in never]: never };
   };
@@ -790,3 +964,12 @@ export type PublicationStatusT = PublicationStatus;
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 export type PublicationRow = Database["public"]["Tables"]["social_publications"]["Row"];
 export type SocialAccountRow = Database["public"]["Tables"]["social_accounts"]["Row"];
+export type ProposalStatusT = ProposalStatus;
+export type ItemCadenceT = ItemCadence;
+export type ContractStatusT = ContractStatus;
+export type SignerPartyT = SignerParty;
+
+export type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"];
+export type ProposalItemRow = Database["public"]["Tables"]["proposal_items"]["Row"];
+export type ContractRow = Database["public"]["Tables"]["contracts"]["Row"];
+export type ContractTemplateRow = Database["public"]["Tables"]["contract_templates"]["Row"];

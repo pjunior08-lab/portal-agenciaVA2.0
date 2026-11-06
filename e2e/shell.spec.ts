@@ -143,3 +143,24 @@ test.describe("aprovação e social sem login", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 });
+
+test.describe("propostas e contratos", () => {
+  for (const path of ["/propostas", "/propostas/nova", "/contratos", "/contratos/modelos/novo"]) {
+    test(`${path} exige login e guarda o destino`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path)}$`));
+    });
+  }
+
+  test("link de proposta inválido abre sem login e avisa", async ({ page }) => {
+    await page.goto("/proposta/link-que-nao-existe-0000000000");
+    await expect(page).toHaveURL(/\/proposta\//);
+    await expect(page.getByText("Link inválido")).toBeVisible();
+  });
+
+  test("link de contrato inválido abre sem login e avisa", async ({ page }) => {
+    await page.goto("/contrato/link-que-nao-existe-0000000000");
+    await expect(page).toHaveURL(/\/contrato\//);
+    await expect(page.getByText("Link inválido")).toBeVisible();
+  });
+});

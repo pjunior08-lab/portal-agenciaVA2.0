@@ -17,7 +17,9 @@ export function authErrorMessage(error: { message?: string; code?: string } | nu
   if (m.includes("invalid totp") || m.includes("invalid mfa") || code === "mfa_verification_failed")
     return "Código inválido ou vencido. Confira o app autenticador.";
   if (m.includes("fetch") || m.includes("network")) return "Sem conexão com o servidor. Tente de novo.";
-  // mensagens já escritas em português pelas funções do banco
+  if (m.includes("row-level security") || m.includes("permission denied")) return "Você não tem permissão para esta ação.";
+  // mensagens já escritas em português pelas funções do banco (raise exception com nossos códigos)
+  if (error.message && !m.includes("violates") && ["23514", "42501", "P0001"].includes(code)) return error.message;
   if (error.message && /[áéíóúãõç]/i.test(error.message)) return error.message;
   return "Algo deu errado. Tente de novo.";
 }
