@@ -14,6 +14,8 @@ import { Overview } from "./overview";
 import { NotesPanel } from "./notes-panel";
 import { FilesPanel } from "./files-panel";
 import { DocumentsPanel, type ClientDocument } from "./documents-panel";
+import { FinancePanel } from "./finance-panel";
+import { today } from "@/lib/dates";
 import { StrategyPanel } from "./strategy-panel";
 import { PortalPanel } from "./portal-panel";
 
@@ -28,7 +30,7 @@ const TABS = [
   // abas cujo conteúdo depende de módulos de fases seguintes
   { id: "conteudo", label: "Conteúdo", phase: 4, depends: "Aprovação e Social" },
   { id: "metricas", label: "Métricas", phase: 9, depends: "integrações com as redes" },
-  { id: "financeiro", label: "Financeiro", phase: 6, depends: "Financeiro" },
+  { id: "financeiro", label: "Financeiro" },
   { id: "acessos", label: "Acessos", phase: 9, depends: "levantamento das regras de senhas" },
 ] as const;
 
@@ -171,6 +173,33 @@ export default async function ClientePage({
             }))}
           />
         </div>
+      );
+      break;
+    }
+    case "financeiro": {
+      if (!memberCan(ctx, "financeiro")) {
+        body = (
+          <Card>
+            <EmptyState icon={Hammer} title="Sem acesso ao Financeiro" description="Peça a um administrador para liberar o módulo Financeiro." />
+          </Card>
+        );
+        break;
+      }
+      const { data } = await supabase
+        .from("fin_transactions")
+        .select("id, description, amount, due_date, paid, paid_at")
+        .eq("client_id", id)
+        .eq("kind", "receita")
+        .order("due_date", { ascending: false })
+        .limit(200);
+      body = (
+        <FinancePanel
+          monthlyFee={client.monthly_fee == null ? null : Number(client.monthly_fee)}
+          billingDay={client.billing_day}
+          status={client.status}
+          receipts={(data ?? []).map((t) => ({ ...t, amount: Number(t.amount) }))}
+          today={today()}
+        />
       );
       break;
     }

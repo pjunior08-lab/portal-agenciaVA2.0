@@ -164,3 +164,12 @@ test.describe("propostas e contratos", () => {
     await expect(page.getByText("Link inválido")).toBeVisible();
   });
 });
+
+test.describe("financeiro sem login", () => {
+  for (const path of ["/financeiro", "/financeiro/lancamentos"]) {
+    test(`${path} exige login e guarda o destino`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path)}$`));
+    });
+  }
+});

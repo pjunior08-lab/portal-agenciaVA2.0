@@ -198,6 +198,8 @@ export const MODULES: ModuleDef[] = [
       "Visão geral com saldo, resultado, fluxo de caixa e metas",
       "Lançamentos por mês e por tipo",
       "Recorrência e mensalidades dos clientes",
+      "Contas, categorias e metas mensais",
+      "Faturas do cliente no portal",
     ],
   },
   {

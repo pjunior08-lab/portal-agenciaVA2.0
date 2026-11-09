@@ -90,3 +90,11 @@ export function MenuItem({ className, ...props }: DM.DropdownMenuItemProps) {
     />
   );
 }
+
+export function MenuLabel({ className, ...props }: DM.DropdownMenuLabelProps) {
+  return <DM.Label className={cn("px-2.5 pt-2 pb-1 text-[10px] font-semibold tracking-wide text-muted uppercase", className)} {...props} />;
+}
+
+export function MenuSeparator({ className, ...props }: DM.DropdownMenuSeparatorProps) {
+  return <DM.Separator className={cn("my-1 h-px bg-line", className)} {...props} />;
+}

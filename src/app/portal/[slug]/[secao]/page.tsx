@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BriefcaseBusiness, CalendarDays, Clock, Download, FileSignature, FileText, Loader, StickyNote } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, Receipt, Clock, Download, FileSignature, FileText, Loader, StickyNote } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { signedUrls } from "@/lib/storage";
 import { getPortal } from "@/features/portal/context";
 import { PORTAL_SECTIONS } from "@/features/clientes/schemas";
 import { Badge, EmptyState, ErrorState, SectionCard } from "@/components/ui";
-import { dayOf, shortDate } from "@/lib/dates";
+import { dayOf, shortDate, today } from "@/lib/dates";
 import { NETWORKS } from "@/features/aprovacoes/schemas";
 import { cleanHtml } from "@/lib/html";
 import { formatBRL } from "@/lib/utils";
@@ -99,6 +99,46 @@ export default async function PortalSection({
         .map((e) => ({ ...e, actorName: e.actor_side === "cliente" ? "Você" : "Agência" })),
     }));
     return <PortalApprovals slug={slug} posts={posts} openId={envio ?? null} viewer={p.viewer} />;
+  }
+
+  if (section.id === "faturas") {
+    // só pela função: o cliente não lê a tabela de lançamentos
+    const { data, error } = await supabase.rpc("portal_invoices", { c: p.clientId });
+    if (error) return <ErrorState description="Não foi possível carregar suas faturas." />;
+    const now = today();
+    const open = (data ?? []).filter((f) => !f.paid);
+    return (
+      <SectionCard title="Faturas" icon={Receipt} description="Cobranças da agência para você.">
+        {!data?.length ? (
+          <EmptyState icon={Receipt} title="Nenhuma fatura ainda" />
+        ) : (
+          <>
+            {open.length > 0 && (
+              <p className="mb-3 rounded-xl bg-surface-2 p-3 text-sm">
+                Em aberto: <strong>{formatBRL(open.reduce((s, f) => s + Number(f.amount), 0))}</strong>
+              </p>
+            )}
+            <ul className="flex flex-col divide-y divide-line">
+              {data.map((f) => {
+                const late = !f.paid && f.due_date < now;
+                return (
+                  <li key={f.id} className="flex flex-wrap items-center gap-3 py-2.5 text-sm">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{f.description}</span>
+                      <span className="text-xs text-muted">Vencimento {fmtDay(f.due_date)}</span>
+                    </span>
+                    <Badge tone={f.paid ? "success-soft" : late ? "danger" : "neutral"}>
+                      {f.paid ? `Pago${f.paid_at ? ` em ${shortDate(f.paid_at)}` : ""}` : late ? "Atrasada" : "A vencer"}
+                    </Badge>
+                    <span className="w-28 text-right tabular-nums">{formatBRL(Number(f.amount))}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
+      </SectionCard>
+    );
   }
 
   if (section.id === "servicos") {

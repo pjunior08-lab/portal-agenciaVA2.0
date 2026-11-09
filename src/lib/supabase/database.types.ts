@@ -22,6 +22,9 @@ type ProposalStatus = "rascunho" | "enviada" | "em_negociacao" | "aceita" | "rec
 type ItemCadence = "unica" | "mensal" | "trimestral" | "semestral" | "anual";
 type ContractStatus = "rascunho" | "aguardando" | "assinado" | "cancelado";
 type SignerParty = "contratante" | "contratada";
+type FinKind = "receita" | "despesa" | "transferencia";
+type FinSubtype = "fixa" | "variavel" | "imposto" | "pessoa";
+type FinAccountKind = "corrente" | "poupanca" | "caixa" | "investimento" | "outro";
 
 export type Database = {
   __InternalSupabase: { PostgrestVersion: "14.18" };
@@ -480,6 +483,72 @@ export type Database = {
           { foreignKeyName: "contract_signatures_contract_id_fkey"; columns: ["contract_id"]; isOneToOne: false; referencedRelation: "contracts"; referencedColumns: ["id"] },
         ];
       };
+      fin_accounts: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          kind: FinAccountKind;
+          initial_balance: number;
+          color: string;
+          archived_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["fin_accounts"]["Row"]> & Pick<Database["public"]["Tables"]["fin_accounts"]["Row"], "agency_id" | "name">;
+        Update: Partial<Database["public"]["Tables"]["fin_accounts"]["Row"]>;
+        Relationships: [];
+      };
+      fin_categories: {
+        Row: {
+          id: string;
+          agency_id: string;
+          kind: FinKind;
+          subtype: FinSubtype | null;
+          name: string;
+          monthly_goal: number | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["fin_categories"]["Row"]> & Pick<Database["public"]["Tables"]["fin_categories"]["Row"], "agency_id" | "kind" | "name">;
+        Update: Partial<Database["public"]["Tables"]["fin_categories"]["Row"]>;
+        Relationships: [];
+      };
+      fin_transactions: {
+        Row: {
+          id: string;
+          agency_id: string;
+          kind: FinKind;
+          subtype: FinSubtype | null;
+          amount: number;
+          description: string;
+          account_id: string | null;
+          to_account_id: string | null;
+          category_id: string | null;
+          client_id: string | null;
+          contract_id: string | null;
+          person: string | null;
+          notes: string | null;
+          due_date: string;
+          paid: boolean;
+          paid_at: string | null;
+          recurrence_id: string | null;
+          installment: number | null;
+          installments: number | null;
+          source: "manual" | "mensalidade";
+          competence: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["fin_transactions"]["Row"]> & Pick<Database["public"]["Tables"]["fin_transactions"]["Row"], "agency_id" | "kind" | "amount" | "description" | "due_date">;
+        Update: Partial<Database["public"]["Tables"]["fin_transactions"]["Row"]>;
+        Relationships: [
+          { foreignKeyName: "fin_transactions_category_id_fkey"; columns: ["category_id"]; isOneToOne: false; referencedRelation: "fin_categories"; referencedColumns: ["id"] },
+          { foreignKeyName: "fin_transactions_client_id_fkey"; columns: ["client_id"]; isOneToOne: false; referencedRelation: "clients"; referencedColumns: ["id"] },
+          { foreignKeyName: "fin_transactions_account_id_fkey"; columns: ["account_id"]; isOneToOne: false; referencedRelation: "fin_accounts"; referencedColumns: ["id"] },
+        ];
+      };
       checklist_items: {
         Row: {
           id: string;
@@ -836,7 +905,12 @@ export type Database = {
         Relationships: [];
       };
     };
-    Views: { [_ in never]: never };
+    Views: {
+      fin_account_balances: {
+        Row: { account_id: string; agency_id: string; balance: number };
+        Relationships: [];
+      };
+    };
     Functions: {
       create_board: { Args: { a: string; board_name: string }; Returns: string };
       portal_tasks_in_progress: {
@@ -890,6 +964,11 @@ export type Database = {
       log_access: { Args: { user_agent?: string }; Returns: undefined };
       client_open_post: { Args: { p: string }; Returns: undefined };
       share_proposal: { Args: { p: string }; Returns: string };
+      generate_monthly_fees: { Args: { a: string; month: string }; Returns: number };
+      portal_invoices: {
+        Args: { c: string };
+        Returns: { id: string; description: string; amount: number; due_date: string; paid: boolean; paid_at: string | null }[];
+      };
       public_proposal: { Args: { token: string }; Returns: Json };
       public_proposal_decide: {
         Args: { token: string; decision: ProposalStatus; signer_name: string; comment?: string | null; ip?: string | null };
@@ -934,6 +1013,9 @@ export type Database = {
       item_cadence: ItemCadence;
       contract_status: ContractStatus;
       signer_party: SignerParty;
+      fin_kind: FinKind;
+      fin_subtype: FinSubtype;
+      fin_account_kind: FinAccountKind;
     };
     CompositeTypes: { [_ in never]: never };
   };
@@ -973,3 +1055,9 @@ export type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"];
 export type ProposalItemRow = Database["public"]["Tables"]["proposal_items"]["Row"];
 export type ContractRow = Database["public"]["Tables"]["contracts"]["Row"];
 export type ContractTemplateRow = Database["public"]["Tables"]["contract_templates"]["Row"];
+export type FinKindT = FinKind;
+export type FinSubtypeT = FinSubtype;
+export type FinAccountKindT = FinAccountKind;
+export type FinTransactionRow = Database["public"]["Tables"]["fin_transactions"]["Row"];
+export type FinAccountRow = Database["public"]["Tables"]["fin_accounts"]["Row"];
+export type FinCategoryRow = Database["public"]["Tables"]["fin_categories"]["Row"];
