@@ -4,7 +4,11 @@ import Link from "next/link";
 /** Marca no topo da barra lateral: símbolo + nome. */
 export function Brand() {
   return (
-    <Link href="/inicio" className="flex items-center gap-2.5 rounded-xl px-1.5 py-1" aria-label="Vai Aonde Capixaba? — início">
+    <Link
+      href="/inicio"
+      className="flex items-center gap-2.5 rounded-xl px-1.5 py-1"
+      aria-label="Vai Aonde Capixaba? — início"
+    >
       <Image
         src="/brand/simbolo-amarelo.png"
         alt=""

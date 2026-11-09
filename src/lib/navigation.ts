@@ -241,9 +241,11 @@ export const MODULES: ModuleDef[] = [
     status: "confirmado",
     summary: "CRM: funil de vendas, relatórios e automações.",
     features: [
-      "Funil, lista e visão Hoje",
-      "Relatórios de conversão",
-      "Importação, campos personalizados, cadência e integrações",
+      "Funil com arrastar e soltar, meta e resumo do mês",
+      "Lista, visão Hoje e ficha com histórico de contatos e etapas",
+      "Relatórios de conversão com CSV e PDF",
+      "Importação CSV/XLSX, campos personalizados, modelos de mensagem e cadência",
+      "Automações e integrações (próxima etapa)",
     ],
   },
   {

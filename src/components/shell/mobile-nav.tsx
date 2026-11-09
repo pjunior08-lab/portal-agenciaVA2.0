@@ -10,7 +10,7 @@ import { SidebarContent, type ShellUser } from "./sidebar";
 export function MobileNav({ user }: { user: ShellUser }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="sticky top-0 z-40 flex items-center justify-between border-b border-line bg-bg/90 px-4 py-2 backdrop-blur lg:hidden">
+    <div className="sticky top-0 z-40 flex items-center justify-between border-b border-line bg-bg/90 px-4 py-2 backdrop-blur lg:hidden print:hidden">
       <Brand />
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Trigger

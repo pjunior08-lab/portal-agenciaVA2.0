@@ -173,3 +173,19 @@ test.describe("financeiro sem login", () => {
     });
   }
 });
+
+test.describe("comercial sem login", () => {
+  for (const path of [
+    "/comercial",
+    "/comercial/lista",
+    "/comercial/hoje",
+    "/comercial/relatorios",
+    "/comercial/importar",
+    "/comercial/configuracoes",
+  ]) {
+    test(`${path} exige login e guarda o destino`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path)}$`));
+    });
+  }
+});

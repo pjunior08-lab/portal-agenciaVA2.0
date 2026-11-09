@@ -83,7 +83,10 @@ export function SidebarContent({ user, onNavigate }: { user: ShellUser; onNaviga
         </span>
       </Link>
 
-      <nav aria-label="Menu principal" className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-2xl bg-surface p-2">
+      <nav
+        aria-label="Menu principal"
+        className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-2xl bg-surface p-2"
+      >
         {(["operacao", "gestao"] as const).map((group, i) => (
           <div key={group} className={cn("flex flex-col gap-0.5", i > 0 && "border-t border-line pt-3")}>
             {visible
@@ -105,7 +108,10 @@ export function SidebarContent({ user, onNavigate }: { user: ShellUser; onNaviga
             >
               <LayoutGrid className="size-4 text-muted" aria-hidden />
               <span className="flex-1 text-left">Mais áreas</span>
-              <ChevronRight className={cn("size-3.5 text-muted transition-transform", maisOpen && "rotate-90")} aria-hidden />
+              <ChevronRight
+                className={cn("size-3.5 text-muted transition-transform", maisOpen && "rotate-90")}
+                aria-hidden
+              />
             </button>
             {maisOpen && (
               <div id="nav-mais-areas" className="mt-0.5 flex flex-col gap-0.5">
@@ -128,7 +134,7 @@ export function SidebarContent({ user, onNavigate }: { user: ShellUser; onNaviga
 
 export function Sidebar({ user }: { user: ShellUser }) {
   return (
-    <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 p-3 pr-0 lg:block">
+    <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 p-3 pr-0 lg:block print:hidden">
       <SidebarContent user={user} />
     </aside>
   );

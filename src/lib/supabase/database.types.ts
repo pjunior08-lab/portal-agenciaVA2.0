@@ -25,6 +25,10 @@ type SignerParty = "contratante" | "contratada";
 type FinKind = "receita" | "despesa" | "transferencia";
 type FinSubtype = "fixa" | "variavel" | "imposto" | "pessoa";
 type FinAccountKind = "corrente" | "poupanca" | "caixa" | "investimento" | "outro";
+type CrmStage = "novo_lead" | "contato_feito" | "orcamento" | "proposta" | "negociacao" | "fechado" | "perdido";
+type CrmChannel = "whatsapp" | "ligacao" | "email" | "presencial" | "outro";
+type CrmResult = "sem_resposta" | "respondeu" | "pediu_retorno" | "reuniao_marcada" | "sem_interesse";
+type CrmFieldType = "texto" | "numero" | "data" | "opcoes";
 
 export type Database = {
   __InternalSupabase: { PostgrestVersion: "14.18" };
@@ -549,6 +553,130 @@ export type Database = {
           { foreignKeyName: "fin_transactions_account_id_fkey"; columns: ["account_id"]; isOneToOne: false; referencedRelation: "fin_accounts"; referencedColumns: ["id"] },
         ];
       };
+      crm_settings: {
+        Row: {
+          agency_id: string;
+          segments: string[];
+          tags: string[];
+          cadence_days: number[];
+          cadence_paused: boolean;
+          stale_days: number;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_settings"]["Row"]> & Pick<Database["public"]["Tables"]["crm_settings"]["Row"], "agency_id">;
+        Update: Partial<Database["public"]["Tables"]["crm_settings"]["Row"]>;
+        Relationships: [];
+      };
+      crm_custom_fields: {
+        Row: {
+          id: string;
+          agency_id: string;
+          key: string;
+          label: string;
+          type: CrmFieldType;
+          options: string[];
+          position: number;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_custom_fields"]["Row"]> & Pick<Database["public"]["Tables"]["crm_custom_fields"]["Row"], "agency_id" | "key" | "label">;
+        Update: Partial<Database["public"]["Tables"]["crm_custom_fields"]["Row"]>;
+        Relationships: [];
+      };
+      crm_message_templates: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          channel: CrmChannel;
+          body: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_message_templates"]["Row"]> & Pick<Database["public"]["Tables"]["crm_message_templates"]["Row"], "agency_id" | "name" | "body">;
+        Update: Partial<Database["public"]["Tables"]["crm_message_templates"]["Row"]>;
+        Relationships: [];
+      };
+      crm_goals: {
+        Row: {
+          agency_id: string;
+          month: string;
+          new_clients: number;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_goals"]["Row"]> & Pick<Database["public"]["Tables"]["crm_goals"]["Row"], "agency_id" | "month" | "new_clients">;
+        Update: Partial<Database["public"]["Tables"]["crm_goals"]["Row"]>;
+        Relationships: [];
+      };
+      crm_opportunities: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          company: string | null;
+          document: string | null;
+          email: string | null;
+          phone: string | null;
+          segment: string | null;
+          origin: string | null;
+          tags: string[];
+          owner_id: string | null;
+          stage: CrmStage;
+          position: number;
+          value: number | null;
+          next_step: string | null;
+          next_step_at: string | null;
+          last_contact_at: string | null;
+          attempts: number;
+          lost_reason: string | null;
+          closed_at: string | null;
+          lost_at: string | null;
+          stage_changed_at: string;
+          custom: Json;
+          notes: string | null;
+          client_id: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_opportunities"]["Row"]> & Pick<Database["public"]["Tables"]["crm_opportunities"]["Row"], "agency_id" | "name">;
+        Update: Partial<Database["public"]["Tables"]["crm_opportunities"]["Row"]>;
+        Relationships: [
+          { foreignKeyName: "crm_opportunities_owner_id_fkey"; columns: ["owner_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
+      crm_stage_history: {
+        Row: {
+          id: string;
+          agency_id: string;
+          opportunity_id: string;
+          from_stage: CrmStage | null;
+          to_stage: CrmStage;
+          changed_by: string | null;
+          changed_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_stage_history"]["Row"]> & Pick<Database["public"]["Tables"]["crm_stage_history"]["Row"], "agency_id" | "opportunity_id" | "to_stage">;
+        Update: Partial<Database["public"]["Tables"]["crm_stage_history"]["Row"]>;
+        Relationships: [
+          { foreignKeyName: "crm_stage_history_opportunity_id_fkey"; columns: ["opportunity_id"]; isOneToOne: false; referencedRelation: "crm_opportunities"; referencedColumns: ["id"] },
+        ];
+      };
+      crm_activities: {
+        Row: {
+          id: string;
+          agency_id: string;
+          opportunity_id: string;
+          kind: "contato" | "nota";
+          channel: CrmChannel | null;
+          result: CrmResult | null;
+          note: string | null;
+          author_id: string | null;
+          happened_at: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_activities"]["Row"]> & Pick<Database["public"]["Tables"]["crm_activities"]["Row"], "agency_id" | "opportunity_id">;
+        Update: Partial<Database["public"]["Tables"]["crm_activities"]["Row"]>;
+        Relationships: [
+          { foreignKeyName: "crm_activities_opportunity_id_fkey"; columns: ["opportunity_id"]; isOneToOne: false; referencedRelation: "crm_opportunities"; referencedColumns: ["id"] },
+        ];
+      };
       checklist_items: {
         Row: {
           id: string;
@@ -1016,6 +1144,10 @@ export type Database = {
       fin_kind: FinKind;
       fin_subtype: FinSubtype;
       fin_account_kind: FinAccountKind;
+      crm_stage: CrmStage;
+      crm_channel: CrmChannel;
+      crm_result: CrmResult;
+      crm_field_type: CrmFieldType;
     };
     CompositeTypes: { [_ in never]: never };
   };
@@ -1061,3 +1193,9 @@ export type FinAccountKindT = FinAccountKind;
 export type FinTransactionRow = Database["public"]["Tables"]["fin_transactions"]["Row"];
 export type FinAccountRow = Database["public"]["Tables"]["fin_accounts"]["Row"];
 export type FinCategoryRow = Database["public"]["Tables"]["fin_categories"]["Row"];
+export type CrmStageT = CrmStage;
+export type CrmChannelT = CrmChannel;
+export type CrmResultT = CrmResult;
+export type CrmFieldTypeT = CrmFieldType;
+export type OpportunityRow = Database["public"]["Tables"]["crm_opportunities"]["Row"];
+export type CrmActivityRow = Database["public"]["Tables"]["crm_activities"]["Row"];
