@@ -632,6 +632,7 @@ export type Database = {
           custom: Json;
           notes: string | null;
           client_id: string | null;
+          source: "manual" | "importacao" | "api" | "formulario";
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -641,6 +642,129 @@ export type Database = {
         Relationships: [
           { foreignKeyName: "crm_opportunities_owner_id_fkey"; columns: ["owner_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];
+      };
+      crm_distribution: {
+        Row: {
+          agency_id: string;
+          members: string[];
+          pointer: number;
+          auto_new: boolean;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_distribution"]["Row"]> & Pick<Database["public"]["Tables"]["crm_distribution"]["Row"], "agency_id">;
+        Update: Partial<Database["public"]["Tables"]["crm_distribution"]["Row"]>;
+        Relationships: [];
+      };
+      crm_rules: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          active: boolean;
+          trigger: "lead_criado" | "etapa_alterada" | "sem_contato";
+          conditions: Json;
+          actions: Json;
+          position: number;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_rules"]["Row"]> & Pick<Database["public"]["Tables"]["crm_rules"]["Row"], "agency_id" | "name" | "trigger" | "actions">;
+        Update: Partial<Database["public"]["Tables"]["crm_rules"]["Row"]>;
+        Relationships: [];
+      };
+      crm_rule_runs: {
+        Row: {
+          id: string;
+          agency_id: string;
+          rule_id: string | null;
+          rule_name: string;
+          opportunity_id: string | null;
+          trigger: string;
+          status: "ok" | "erro";
+          detail: string | null;
+          marker: string | null;
+          ran_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_rule_runs"]["Row"]> & Pick<Database["public"]["Tables"]["crm_rule_runs"]["Row"], "agency_id" | "rule_name" | "trigger" | "status">;
+        Update: Partial<Database["public"]["Tables"]["crm_rule_runs"]["Row"]>;
+        Relationships: [];
+      };
+      crm_api_keys: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          prefix: string;
+          key_hash: string;
+          created_by: string | null;
+          created_at: string;
+          last_used_at: string | null;
+          revoked_at: string | null;
+          window_start: string | null;
+          window_count: number;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_api_keys"]["Row"]> & Pick<Database["public"]["Tables"]["crm_api_keys"]["Row"], "agency_id" | "name" | "prefix" | "key_hash">;
+        Update: Partial<Database["public"]["Tables"]["crm_api_keys"]["Row"]>;
+        Relationships: [];
+      };
+      crm_webhooks: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          url: string;
+          events: string[];
+          secret: string;
+          active: boolean;
+          last_status: number | null;
+          last_at: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_webhooks"]["Row"]> & Pick<Database["public"]["Tables"]["crm_webhooks"]["Row"], "agency_id" | "name" | "url" | "events" | "secret">;
+        Update: Partial<Database["public"]["Tables"]["crm_webhooks"]["Row"]>;
+        Relationships: [];
+      };
+      crm_webhook_deliveries: {
+        Row: {
+          id: string;
+          agency_id: string;
+          webhook_id: string;
+          event: string;
+          opportunity_id: string | null;
+          request_id: number | null;
+          status_code: number | null;
+          ok: boolean | null;
+          error: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_webhook_deliveries"]["Row"]> & Pick<Database["public"]["Tables"]["crm_webhook_deliveries"]["Row"], "agency_id" | "webhook_id" | "event">;
+        Update: Partial<Database["public"]["Tables"]["crm_webhook_deliveries"]["Row"]>;
+        Relationships: [];
+      };
+      crm_forms: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          token: string;
+          title: string;
+          description: string | null;
+          fields: Json;
+          stage: CrmStage;
+          owner_id: string | null;
+          distribute: boolean;
+          origin: string | null;
+          tags: string[];
+          success_message: string | null;
+          active: boolean;
+          submissions: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["crm_forms"]["Row"]> & Pick<Database["public"]["Tables"]["crm_forms"]["Row"], "agency_id" | "name" | "title">;
+        Update: Partial<Database["public"]["Tables"]["crm_forms"]["Row"]>;
+        Relationships: [];
       };
       crm_stage_history: {
         Row: {
@@ -1040,6 +1164,9 @@ export type Database = {
       };
     };
     Functions: {
+      crm_api_create_lead: { Args: { api_key: string; payload: Json }; Returns: Json };
+      crm_form_public: { Args: { form_token: string }; Returns: Json };
+      crm_form_submit: { Args: { form_token: string; payload: Json; ip_hash: string | null }; Returns: boolean };
       create_board: { Args: { a: string; board_name: string }; Returns: string };
       portal_tasks_in_progress: {
         Args: { c: string };

@@ -166,14 +166,12 @@ export async function addActivity(opportunityId: string, input: unknown): Promis
   const parsed = activitySchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("crm_activities")
-    .insert({
-      ...parsed.data,
-      opportunity_id: opportunityId,
-      agency_id: ctx.agency.id,
-      author_id: ctx.userId,
-    });
+  const { error } = await supabase.from("crm_activities").insert({
+    ...parsed.data,
+    opportunity_id: opportunityId,
+    agency_id: ctx.agency.id,
+    author_id: ctx.userId,
+  });
   if (error) return fail(error);
   refresh();
   return { ok: true };
@@ -380,6 +378,7 @@ export async function importOpportunities(
       position: (position += 1024),
       agency_id: ctx.agency.id,
       created_by: ctx.userId,
+      source: "importacao" as const,
     }));
     const { error } = await supabase.from("crm_opportunities").insert(chunk);
     if (error) {

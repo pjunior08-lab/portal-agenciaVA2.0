@@ -181,6 +181,8 @@ test.describe("comercial sem login", () => {
     "/comercial/hoje",
     "/comercial/relatorios",
     "/comercial/importar",
+    "/comercial/automacoes",
+    "/comercial/integracoes",
     "/comercial/configuracoes",
   ]) {
     test(`${path} exige login e guarda o destino`, async ({ page }) => {
@@ -188,4 +190,17 @@ test.describe("comercial sem login", () => {
       await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path)}$`));
     });
   }
+});
+
+test.describe("comercial: entradas públicas", () => {
+  test("API de leads exige chave", async ({ request }) => {
+    const r = await request.post("/api/comercial/leads", { data: { nome: "Teste" } });
+    expect(r.status()).toBe(401);
+    expect((await r.json()).ok).toBe(false);
+  });
+
+  test("formulário inexistente avisa que está indisponível", async ({ page }) => {
+    await page.goto("/f/nao-existe-123");
+    await expect(page.getByText("Formulário indisponível")).toBeVisible();
+  });
 });

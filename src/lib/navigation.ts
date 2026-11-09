@@ -245,7 +245,8 @@ export const MODULES: ModuleDef[] = [
       "Lista, visão Hoje e ficha com histórico de contatos e etapas",
       "Relatórios de conversão com CSV e PDF",
       "Importação CSV/XLSX, campos personalizados, modelos de mensagem e cadência",
-      "Automações e integrações (próxima etapa)",
+      "Automações: regras, execuções e distribuição em rodízio",
+      "Integrações: formulários públicos, API de entrada, webhooks e leads da Meta via Make",
     ],
   },
   {

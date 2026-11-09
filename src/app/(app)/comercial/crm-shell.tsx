@@ -3,7 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useMemo, useState } from "react";
-import { BarChart3, CalendarCheck, Columns3, List, Plus, Settings2, Target, Upload } from "lucide-react";
+import {
+  BarChart3,
+  CalendarCheck,
+  Columns3,
+  List,
+  Plug,
+  Plus,
+  Settings2,
+  Target,
+  Upload,
+  Workflow,
+} from "lucide-react";
 import { PageHeader } from "@/components/shell/page-header";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -27,9 +38,6 @@ export function useCrm() {
   if (!c) throw new Error("useCrm fora do Comercial");
   return c;
 }
-
-// abas da referência que entram na Fase 7B
-const NEXT_PHASE = ["Automações", "Integrações"];
 
 export function CrmShell({
   base,
@@ -75,6 +83,12 @@ export function CrmShell({
       icon: BarChart3,
       active: path.startsWith("/comercial/relatorios"),
     },
+    {
+      href: "/comercial/automacoes",
+      label: "Automações",
+      icon: Workflow,
+      active: path.startsWith("/comercial/automacoes"),
+    },
     ...(canEdit
       ? [
           {
@@ -85,6 +99,12 @@ export function CrmShell({
           },
         ]
       : []),
+    {
+      href: "/comercial/integracoes",
+      label: "Integrações",
+      icon: Plug,
+      active: path.startsWith("/comercial/integracoes"),
+    },
     {
       href: "/comercial/configuracoes",
       label: "Configurações",
@@ -123,15 +143,6 @@ export function CrmShell({
               >
                 <t.icon className="size-3.5" aria-hidden /> {t.label}
               </Link>
-            ))}
-            {NEXT_PHASE.map((t) => (
-              <span
-                key={t}
-                className="inline-flex h-8 cursor-not-allowed items-center gap-1 rounded-full px-3.5 text-xs whitespace-nowrap text-muted-2"
-                title="Chega na próxima etapa (7B)"
-              >
-                {t} <span className="text-[10px]">em breve</span>
-              </span>
             ))}
           </nav>
         </PageHeader>

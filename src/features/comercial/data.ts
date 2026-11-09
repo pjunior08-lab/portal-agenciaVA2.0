@@ -5,6 +5,7 @@ import type { CrmChannelT, CrmFieldTypeT } from "@/lib/supabase/database.types";
 import type { ActivityRow, HistoryRow, Opp } from "./schemas";
 
 export interface OppView extends Opp {
+  source: "manual" | "importacao" | "api" | "formulario";
   notes: string | null;
   custom: Record<string, string | number | null>;
 }
@@ -48,7 +49,7 @@ export const DEFAULT_SETTINGS: CrmSettings = {
 };
 
 const OPP_COLUMNS =
-  "id, name, company, document, email, phone, segment, origin, tags, owner_id, stage, position, value, next_step, next_step_at, last_contact_at, attempts, lost_reason, closed_at, lost_at, stage_changed_at, created_at, client_id, notes, custom";
+  "id, name, company, document, email, phone, segment, origin, tags, owner_id, stage, position, value, next_step, next_step_at, last_contact_at, attempts, lost_reason, closed_at, lost_at, stage_changed_at, created_at, client_id, notes, custom, source";
 
 /** Tudo o que as telas do Comercial usam: oportunidades, configurações, campos, modelos, equipe e meta. */
 export async function loadCrmBase(ctx: MemberContext, month: string): Promise<CrmBase> {
@@ -131,4 +132,143 @@ export async function loadReportData(
       .limit(50000),
   ]);
   return { history: history.data ?? [], acts: acts.data ?? [], error: !!(history.error || acts.error) };
+}
+
+// ---------- Automações e integrações ----------
+export interface RuleRow {
+  id: string;
+  name: string;
+  active: boolean;
+  trigger: "lead_criado" | "etapa_alterada" | "sem_contato";
+  conditions: Record<string, unknown>;
+  actions: unknown;
+  created_at: string;
+}
+export interface RunRow {
+  id: string;
+  rule_name: string;
+  trigger: string;
+  status: "ok" | "erro";
+  detail: string | null;
+  ran_at: string;
+  opportunity_id: string | null;
+}
+
+export async function loadAutomations(ctx: MemberContext) {
+  const supabase = await createClient();
+  const [rules, runs, dist] = await Promise.all([
+    supabase
+      .from("crm_rules")
+      .select("id, name, active, trigger, conditions, actions, created_at")
+      .eq("agency_id", ctx.agency.id)
+      .order("position")
+      .order("created_at"),
+    supabase
+      .from("crm_rule_runs")
+      .select("id, rule_name, trigger, status, detail, ran_at, opportunity_id")
+      .eq("agency_id", ctx.agency.id)
+      .order("ran_at", { ascending: false })
+      .limit(300),
+    supabase
+      .from("crm_distribution")
+      .select("members, auto_new, pointer")
+      .eq("agency_id", ctx.agency.id)
+      .maybeSingle(),
+  ]);
+  return {
+    rules: (rules.data ?? []) as RuleRow[],
+    runs: (runs.data ?? []) as RunRow[],
+    distribution: dist.data ?? { members: [], auto_new: false, pointer: 0 },
+    error: !!(rules.error || runs.error || dist.error),
+  };
+}
+
+export interface ApiKeyRow {
+  id: string;
+  name: string;
+  prefix: string;
+  created_at: string;
+  last_used_at: string | null;
+  revoked_at: string | null;
+}
+export interface WebhookRow {
+  id: string;
+  name: string;
+  url: string;
+  events: string[];
+  secret: string;
+  active: boolean;
+  last_status: number | null;
+  last_at: string | null;
+}
+export interface DeliveryRow {
+  id: string;
+  webhook_id: string;
+  event: string;
+  status_code: number | null;
+  ok: boolean | null;
+  error: string | null;
+  created_at: string;
+}
+export interface FormRow {
+  id: string;
+  name: string;
+  token: string;
+  title: string;
+  description: string | null;
+  fields: { key: string; required: boolean }[];
+  stage: string;
+  owner_id: string | null;
+  distribute: boolean;
+  origin: string | null;
+  tags: string[];
+  success_message: string | null;
+  active: boolean;
+  submissions: number;
+}
+
+/** Chaves e webhooks só para administradores (o banco também bloqueia). */
+export async function loadIntegrations(ctx: MemberContext) {
+  const supabase = await createClient();
+  const isAdmin = ctx.role === "admin";
+  const empty = { data: [] as never[], error: null };
+  const [keys, hooks, deliveries, forms] = await Promise.all([
+    isAdmin
+      ? supabase
+          .from("crm_api_keys")
+          .select("id, name, prefix, created_at, last_used_at, revoked_at")
+          .eq("agency_id", ctx.agency.id)
+          .order("created_at", { ascending: false })
+      : empty,
+    isAdmin
+      ? supabase
+          .from("crm_webhooks")
+          .select("id, name, url, events, secret, active, last_status, last_at")
+          .eq("agency_id", ctx.agency.id)
+          .order("created_at")
+      : empty,
+    isAdmin
+      ? supabase
+          .from("crm_webhook_deliveries")
+          .select("id, webhook_id, event, status_code, ok, error, created_at")
+          .eq("agency_id", ctx.agency.id)
+          .order("created_at", { ascending: false })
+          .limit(100)
+      : empty,
+    supabase
+      .from("crm_forms")
+      .select(
+        "id, name, token, title, description, fields, stage, owner_id, distribute, origin, tags, success_message, active, submissions",
+      )
+      .eq("agency_id", ctx.agency.id)
+      .order("created_at"),
+  ]);
+  return {
+    isAdmin,
+    keys: (keys.data ?? []) as ApiKeyRow[],
+    webhooks: (hooks.data ?? []) as WebhookRow[],
+    deliveries: (deliveries.data ?? []) as DeliveryRow[],
+    forms: (forms.data ?? []) as unknown as FormRow[],
+    error: !!(keys.error || hooks.error || deliveries.error || forms.error),
+  };
 }

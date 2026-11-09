@@ -44,6 +44,7 @@ import {
   type OppDetails,
 } from "@/features/comercial/actions";
 import type { OppView } from "@/features/comercial/data";
+import { SOURCES } from "@/features/comercial/automations";
 import { useCrm } from "./crm-shell";
 
 const dateTime = new Intl.DateTimeFormat("pt-BR", {
@@ -72,7 +73,17 @@ export function OpportunityModal({
       onOpenChange={(v) => !v && onClose()}
       title={opp ? opp.name : "Nova"}
       accent={opp ? undefined : "oportunidade"}
-      description={opp ? [opp.company, STAGES[opp.stage].label].filter(Boolean).join(" · ") : undefined}
+      description={
+        opp
+          ? [
+              opp.company,
+              STAGES[opp.stage].label,
+              opp.source !== "manual" ? `entrou por ${SOURCES[opp.source]}` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")
+          : undefined
+      }
       size="lg"
       footer={
         tab === "dados" &&
@@ -564,7 +575,7 @@ function History({ opp }: { opp: OppView }) {
           <StageDot stage={h.to_stage as CrmStageT} />
           <span className="ml-auto text-xs text-muted">
             {dateTime.format(new Date(h.changed_at))} ·{" "}
-            {h.changed_by ? personName(h.changed_by) : "importação/sistema"}
+            {h.changed_by ? personName(h.changed_by) : "automação/sistema"}
           </span>
         </li>
       ))}

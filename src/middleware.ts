@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
 /** Rotas que não exigem login. */
-const PUBLIC_PREFIXES = ["/login", "/cadastro", "/recuperar-senha", "/convite", "/portal-convite", "/e", "/proposta", "/contrato", "/auth"];
+const PUBLIC_PREFIXES = ["/login", "/cadastro", "/recuperar-senha", "/convite", "/portal-convite", "/e", "/proposta", "/contrato", "/auth", "/f", "/api/comercial/leads"];
 /** Rotas de login: quem já está logado é mandado para o sistema. */
 const GUEST_ONLY = ["/login", "/cadastro"];
 
