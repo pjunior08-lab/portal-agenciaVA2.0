@@ -13,7 +13,7 @@ interface StatCardProps {
 /** Indicador simples: rótulo, número grande e legenda. */
 export function StatCard({ label, value, icon, hint, className }: StatCardProps) {
   return (
-    <div className={cn("flex flex-col gap-2 rounded-card bg-surface p-4", className)}>
+    <div className={cn("lift animate-rise flex flex-col gap-2 rounded-card bg-surface p-4", className)}>
       <div className="flex items-start justify-between gap-2">
         <span className="text-xs text-muted">{label}</span>
         {icon && <IconBubble icon={icon} />}
@@ -27,7 +27,7 @@ export function StatCard({ label, value, icon, hint, className }: StatCardProps)
 /** Indicador de destaque em painel escuro (valor em aberto, valor em contratos...). */
 export function HeroStatCard({ label, value, icon, hint, className }: StatCardProps) {
   return (
-    <div className={cn("flex min-h-40 flex-col justify-between rounded-card bg-panel p-5 text-panel-ink", className)}>
+    <div className={cn("lift animate-rise flex min-h-40 flex-col justify-between rounded-card bg-panel p-5 text-panel-ink", className)}>
       <div className="flex items-start justify-between gap-2">
         {icon && <IconBubble icon={icon} className="size-9" />}
         {hint && (

@@ -142,7 +142,7 @@ export function MapsApp({
               <h2 className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">{g.name}</h2>
               <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {g.items.map((m) => (
-                  <li key={m.id} className="group relative rounded-card bg-surface p-4 hover:shadow-sm">
+                  <li key={m.id} className="group relative lift rounded-card bg-surface p-4">
                     <Link href={`/mapa-mental/${m.id}`} className="flex flex-col gap-2 pr-8">
                       <span className="flex size-9 items-center justify-center rounded-xl bg-brand-soft">
                         <Network className="size-4" aria-hidden />

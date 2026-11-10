@@ -23,8 +23,8 @@ export function MobileNav({ user }: { user: ShellUser }) {
             <Menu className="size-5" />
           </Dialog.Trigger>
           <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-            <Dialog.Content className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-bg p-3 shadow-2xl focus:outline-none">
+            <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in" />
+            <Dialog.Content className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-bg p-3 shadow-2xl focus:outline-none data-[state=closed]:animate-drawer-out data-[state=open]:animate-drawer-in">
               <Dialog.Title className="sr-only">Menu</Dialog.Title>
               <Dialog.Description className="sr-only">Navegação entre os módulos</Dialog.Description>
               <Dialog.Close

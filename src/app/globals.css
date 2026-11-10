@@ -94,6 +94,88 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --radius-card: 1rem;
+
+  /* Animações (classes animate-*) */
+  --animate-page-in: page-in 320ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  --animate-rise: rise 380ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  --animate-fade-in: fade-in 180ms ease-out;
+  --animate-fade-out: fade-out 140ms ease-in;
+  --animate-dialog-in: dialog-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-dialog-out: dialog-out 140ms ease-in;
+  --animate-pop-in: pop-in 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-pop-out: pop-out 110ms ease-in;
+  --animate-drawer-in: drawer-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-drawer-out: drawer-out 180ms ease-in;
+
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96) translateY(6px);
+    }
+  }
+  @keyframes dialog-out {
+    to {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96) translateY(-4px);
+    }
+  }
+  @keyframes pop-out {
+    to {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+  @keyframes drawer-in {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes drawer-out {
+    to {
+      transform: translateX(-100%);
+    }
+  }
+}
+
+/* Cartão clicável ou indicador: sobe um pouco ao passar o mouse */
+@utility lift {
+  transition:
+    translate 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 200ms ease-out;
+  @media (hover: hover) {
+    &:hover {
+      translate: 0 -3px;
+      box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--ink) 25%, transparent);
+    }
+  }
 }
 
 html,
@@ -110,6 +192,34 @@ body {
 :focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+/* Indicadores lado a lado entram um depois do outro */
+.animate-rise:nth-child(2) {
+  animation-delay: 50ms;
+}
+.animate-rise:nth-child(3) {
+  animation-delay: 100ms;
+}
+.animate-rise:nth-child(4) {
+  animation-delay: 150ms;
+}
+.animate-rise:nth-child(n + 5) {
+  animation-delay: 200ms;
+}
+
+/* Quem pediu menos movimento no sistema não vê animações */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+  .lift:hover {
+    translate: none;
+  }
 }
 
 /* Estado vazio listrado usado em colunas de kanban */

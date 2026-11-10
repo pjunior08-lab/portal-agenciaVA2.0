@@ -135,7 +135,7 @@ export function ContractView({
           <TermTimeline startsOn={c.starts_on} endsOn={c.ends_on} renewalOn={c.renewal_on} value={c.value} today={today()} />
           <SignaturesCard signatures={signatures} documentHash={c.document_hash} />
           {c.proposal && (
-            <Link href={`/propostas/${c.proposal.id}`} className="no-print rounded-card bg-surface p-4 text-xs hover:ring-2 hover:ring-brand">
+            <Link href={`/propostas/${c.proposal.id}`} className="no-print lift rounded-card bg-surface p-4 text-xs hover:ring-2 hover:ring-brand">
               <span className="text-muted">Proposta de origem</span>
               <span className="block font-medium">
                 Nº {c.proposal.number} · {c.proposal.title}

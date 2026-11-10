@@ -41,7 +41,7 @@ export function FilterMenu({ label, value, options, onChange, icon, className }:
         <DM.Content
           align="start"
           sideOffset={6}
-          className="z-50 min-w-48 rounded-xl border border-line bg-surface p-1 shadow-xl"
+          className="z-50 min-w-48 rounded-xl border border-line bg-surface p-1 shadow-xl origin-(--radix-dropdown-menu-content-transform-origin) data-[state=closed]:animate-pop-out data-[state=open]:animate-pop-in"
         >
           <DM.RadioGroup value={value} onValueChange={onChange}>
             {options.map((o) => (
@@ -72,7 +72,7 @@ export function MenuContent({ className, ...props }: DM.DropdownMenuContentProps
     <DM.Portal>
       <DM.Content
         sideOffset={6}
-        className={cn("z-50 min-w-44 rounded-xl border border-line bg-surface p-1 shadow-xl", className)}
+        className={cn("z-50 min-w-44 rounded-xl border border-line bg-surface p-1 shadow-xl origin-(--radix-dropdown-menu-content-transform-origin) data-[state=closed]:animate-pop-out data-[state=open]:animate-pop-in", className)}
         {...props}
       />
     </DM.Portal>

@@ -145,7 +145,7 @@ function ContractsTab({ contracts, indicators }: { contracts: ContractListItem[]
             const overdue = c.status === "assinado" && renew && renew < now;
             return (
               <li key={c.id}>
-                <Link href={`/contratos/${c.id}`} className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-card bg-surface p-4 hover:ring-2 hover:ring-brand">
+                <Link href={`/contratos/${c.id}`} className="flex flex-wrap items-center gap-x-4 gap-y-2 lift rounded-card bg-surface p-4 hover:ring-2 hover:ring-brand">
                   <span className="min-w-0 flex-1">
                     <span className="block text-[11px] text-muted">{c.clientName}</span>
                     <span className="block truncate font-medium">{c.title}</span>

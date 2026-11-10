@@ -135,7 +135,7 @@ export function ClientsBoard({
               <li key={c.id}>
                 <Link
                   href={`/clientes/${c.id}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-card bg-surface transition-shadow hover:shadow-md focus-visible:shadow-md"
+                  className="group flex h-full flex-col overflow-hidden lift rounded-card bg-surface focus-visible:shadow-md"
                 >
                   <div className="h-14" style={{ background: c.cover_color ?? "var(--panel)" }} aria-hidden />
                   <div className="-mt-7 flex flex-1 flex-col gap-3 px-4 pb-4">

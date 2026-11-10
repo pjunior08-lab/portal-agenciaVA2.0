@@ -121,7 +121,7 @@ export function PropostasApp({
             const inv = investment(p.items);
             return (
               <li key={p.id}>
-                <Link href={`/propostas/${p.id}`} className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-card bg-surface p-4 hover:ring-2 hover:ring-brand">
+                <Link href={`/propostas/${p.id}`} className="flex flex-wrap items-center gap-x-4 gap-y-2 lift rounded-card bg-surface p-4 hover:ring-2 hover:ring-brand">
                   <span className="h-10 w-1.5 shrink-0 rounded-full" style={{ background: p.cover }} aria-hidden />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[11px] text-muted">

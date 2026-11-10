@@ -79,7 +79,7 @@ export function NotificationBell({ className }: { className?: string }) {
         <Popover.Content
           align="start"
           sideOffset={8}
-          className="z-50 w-80 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-surface p-2 shadow-xl ring-1 ring-line"
+          className="z-50 w-80 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-surface p-2 shadow-xl ring-1 ring-line origin-(--radix-popover-content-transform-origin) data-[state=closed]:animate-pop-out data-[state=open]:animate-pop-in"
         >
           <div className="flex items-center justify-between px-2 py-1.5">
             <p className="text-sm font-semibold">Notificações</p>

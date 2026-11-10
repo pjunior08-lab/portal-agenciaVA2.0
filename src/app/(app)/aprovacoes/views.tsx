@@ -39,7 +39,7 @@ export function GridView({ posts, onOpen }: ViewProps) {
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {posts.map((p) => (
         <li key={p.id}>
-          <button type="button" onClick={() => onOpen(p)} className="flex w-full flex-col overflow-hidden rounded-card bg-surface text-left hover:ring-2 hover:ring-brand">
+          <button type="button" onClick={() => onOpen(p)} className="flex w-full flex-col overflow-hidden lift rounded-card bg-surface text-left hover:ring-2 hover:ring-brand">
             {p.kind === "post" && (
               <div className="relative">
                 <MediaThumb media={p.media[0]} className="aspect-[4/3] w-full" />

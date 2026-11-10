@@ -265,7 +265,7 @@ export function FunnelsApp({
                 <li
                   key={f.id}
                   className={cn(
-                    "relative rounded-card bg-surface p-4 hover:shadow-sm",
+                    "relative lift rounded-card bg-surface p-4",
                     f.deleted_at && "opacity-75",
                   )}
                 >

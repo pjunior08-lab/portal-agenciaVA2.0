@@ -220,7 +220,7 @@ function Schedules({ publications, clients, onOpen }: { publications: Publicatio
         <ul className="flex flex-col gap-2">
           {upcoming.map((p) => (
             <li key={p.id}>
-              <button type="button" onClick={() => onOpen(p)} className="flex w-full items-center gap-3 rounded-card bg-surface p-3 text-left hover:ring-2 hover:ring-brand">
+              <button type="button" onClick={() => onOpen(p)} className="flex w-full items-center gap-3 lift rounded-card bg-surface p-3 text-left hover:ring-2 hover:ring-brand">
                 <MediaThumb media={p.media} className="size-12 shrink-0 rounded-lg" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{p.title}</span>

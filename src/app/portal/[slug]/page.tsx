@@ -43,7 +43,7 @@ export default async function PortalHome({ params }: { params: Promise<{ slug: s
               <li key={s.id}>
                 <Link
                   href={`/portal/${slug}/${s.id}`}
-                  className="flex h-full items-center justify-between gap-3 rounded-card bg-surface p-5 hover:shadow-md"
+                  className="flex h-full items-center justify-between gap-3 lift rounded-card bg-surface p-5"
                 >
                   <span className="font-medium">{s.label}</span>
                   {ready ? (
