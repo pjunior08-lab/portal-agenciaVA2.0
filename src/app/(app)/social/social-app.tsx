@@ -6,9 +6,9 @@ import { useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
-import { AtSign, BarChart3, CalendarDays, CheckCircle2, ExternalLink, Link2Off, List, Plus, Share2, Trash2, Undo2, XCircle } from "lucide-react";
+import { AlertTriangle, AtSign, BarChart3, CalendarDays, CheckCircle2, ExternalLink, Link2, Link2Off, List, Plus, RotateCcw, Share2, Trash2, Undo2, Unplug, XCircle, Zap } from "lucide-react";
 import { PageHeader } from "@/components/shell/page-header";
-import { Alert, Badge, Button, Card, EmptyState, Field, FilterMenu, Input, MediaThumb, Modal, MonthCalendar, SegmentedControl, Select, Textarea } from "@/components/ui";
+import { Alert, Badge, Button, buttonVariants, Card, EmptyState, Field, FilterMenu, Input, MediaThumb, Modal, MonthCalendar, SegmentedControl, Select, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { dayOf, isoToLocalInput, today, timeOf, weekdayDate } from "@/lib/dates";
 import {
@@ -19,13 +19,22 @@ import {
   publicationSchema,
   type PublicationFormValues,
 } from "@/features/aprovacoes/schemas";
-import { deleteAccount, deletePublication, saveAccount, savePublication, setPublicationStatus } from "@/features/social/actions";
+import { deleteAccount, deletePublication, disconnectAccount, linkMetaAccounts, saveAccount, savePublication, setPublicationStatus } from "@/features/social/actions";
 import type { PublicationRow, SocialAccountRow, SocialNetworkT } from "@/lib/supabase/database.types";
 
 export interface PublicationView extends PublicationRow {
   clientName: string;
   clientColor: string | null;
   media: { name: string; mime: string | null; url: string | null } | null;
+}
+
+export interface PendingAccount {
+  key: string;
+  network: SocialNetworkT;
+  username: string;
+  picture_url: string | null;
+  page_id: string | null;
+  suggested_client: string | null;
 }
 
 type Client = { id: string; name: string; color: string | null };
@@ -40,13 +49,23 @@ export function SocialApp({
   accounts,
   clients,
   canEdit,
+  metaReady,
+  pending,
+  connectReturned,
+  metaNotice,
 }: {
   publications: PublicationView[];
   accounts: SocialAccountRow[];
   clients: Client[];
   canEdit: boolean;
+  metaReady: boolean;
+  pending: PendingAccount[];
+  connectReturned: boolean;
+  metaNotice: string | null;
 }) {
-  const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("agendamentos");
+  // voltando da conexão com a Meta, abre direto na aba Contas
+  const [tab, setTab] = useState<(typeof TABS)[number]["id"]>(connectReturned || metaNotice ? "contas" : "agendamentos");
+  const [linkOpen, setLinkOpen] = useState(pending.length > 0);
   const [pubModal, setPubModal] = useState<PublicationView | "new" | null>(null);
   const [accModal, setAccModal] = useState<SocialAccountRow | "new" | null>(null);
 
@@ -58,9 +77,18 @@ export function SocialApp({
         actions={
           canEdit &&
           (tab === "contas" ? (
-            <Button onClick={() => setAccModal("new")}>
-              <Plus /> Adicionar conta
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {metaReady && (
+                // rota do servidor que redireciona para a Meta: precisa de navegação completa, não do roteador do Next
+                // eslint-disable-next-line @next/next/no-html-link-for-pages
+                <a href="/api/social/meta/connect" className={buttonVariants()}>
+                  <Link2 /> Conectar Instagram/Facebook
+                </a>
+              )}
+              <Button variant={metaReady ? "secondary" : "primary"} onClick={() => setAccModal("new")}>
+                <Plus /> Adicionar conta
+              </Button>
+            </div>
           ) : (
             <Button onClick={() => setPubModal("new")}>
               <Plus /> Novo agendamento
@@ -87,9 +115,17 @@ export function SocialApp({
         </div>
       </PageHeader>
 
+      {metaNotice && <Alert className="mb-5">{metaNotice}</Alert>}
+      {connectReturned && !pending.length && !metaNotice && (
+        <Alert tone="info" className="mb-5">
+          Nenhuma conta esperando cliente. Se acabou de conectar, as contas já estão na lista abaixo.
+        </Alert>
+      )}
       <Alert tone="info" className="mb-5">
-        A publicação automática nas redes e as métricas dependem da aprovação do nosso aplicativo pela Meta, TikTok, YouTube e LinkedIn
-        (Fase 9). Até lá, os agendamentos funcionam como calendário interno: marque como publicado quando postar.
+        {metaReady
+          ? "Instagram e Facebook: post com publicação automática aprovado pelo cliente entra aqui e sai sozinho na data e hora marcadas, pela conta conectada do cliente. "
+          : "A publicação automática no Instagram e no Facebook ainda não está configurada no servidor (falta o aplicativo da Meta). "}
+        TikTok, YouTube, LinkedIn e os agendamentos criados à mão funcionam como calendário interno: marque como publicado quando postar.
       </Alert>
 
       {tab === "agendamentos" && <Schedules publications={publications} clients={clients} onOpen={setPubModal} />}
@@ -103,6 +139,7 @@ export function SocialApp({
         </Card>
       )}
       {tab === "contas" && <Accounts accounts={accounts} clients={clients} canEdit={canEdit} onOpen={setAccModal} />}
+      {linkOpen && pending.length > 0 && <LinkAccountsModal pending={pending} clients={clients} onClose={() => setLinkOpen(false)} />}
 
       {pubModal && (
         <PublicationModal
@@ -157,6 +194,7 @@ function Schedules({ publications, clients, onOpen }: { publications: Publicatio
             { value: "", label: "Agendados e publicados" },
             { value: "agendado", label: "Agendados" },
             { value: "publicado", label: "Publicados" },
+            { value: "erro", label: "Falharam" },
             { value: "cancelado", label: "Cancelados" },
           ]}
         />
@@ -186,7 +224,8 @@ function Schedules({ publications, clients, onOpen }: { publications: Publicatio
                 <MediaThumb media={p.media} className="size-12 shrink-0 rounded-lg" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{p.title}</span>
-                  <span className="block truncate text-[11px] text-muted">
+                  <span className="flex items-center gap-1 truncate text-[11px] text-muted">
+                    {p.auto && <Zap className="size-3 shrink-0 text-info" aria-label="Publicação automática" />}
                     {p.clientName} · {NETWORKS[p.network]}
                   </span>
                 </span>
@@ -237,7 +276,8 @@ function PublicationModal({
       title: pub?.title ?? "",
       caption: pub?.caption ?? "",
       scheduled_at: isoToLocalInput(pub?.scheduled_at ?? null) || `${today()}T09:00`,
-      status: pub?.status ?? "agendado",
+      // "publicando" e "erro" são do robô: no formulário a escolha é entre agendado, publicado e cancelado
+      status: pub && (pub.status === "publicado" || pub.status === "cancelado") ? pub.status : "agendado",
     },
   });
   const clientId = watch("client_id");
@@ -263,6 +303,11 @@ function PublicationModal({
         <div className="flex w-full flex-wrap items-center gap-2">
           {pub && canEdit && (
             <>
+              {pub.status === "erro" && (
+                <Button variant="secondary" size="sm" disabled={pending} onClick={() => act(() => setPublicationStatus(pub.id, "agendado"))}>
+                  <RotateCcw /> Tentar de novo
+                </Button>
+              )}
               {pub.status === "agendado" && (
                 <>
                   <Button variant="secondary" size="sm" disabled={pending} onClick={() => act(() => setPublicationStatus(pub.id, "publicado"))}>
@@ -273,12 +318,12 @@ function PublicationModal({
                   </Button>
                 </>
               )}
-              {pub.status !== "agendado" && (
+              {(pub.status === "publicado" || pub.status === "cancelado") && (
                 <Button variant="secondary" size="sm" disabled={pending} onClick={() => act(() => setPublicationStatus(pub.id, "agendado"))}>
                   <Undo2 /> Voltar para agendado
                 </Button>
               )}
-              {confirmDelete ? (
+              {pub.status !== "publicando" && (confirmDelete ? (
                 <Button variant="danger" size="sm" loading={pending} onClick={() => act(() => deletePublication(pub.id))}>
                   Confirmar exclusão
                 </Button>
@@ -286,14 +331,14 @@ function PublicationModal({
                 <Button variant="danger-outline" size="sm" onClick={() => setConfirmDelete(true)}>
                   <Trash2 /> Excluir
                 </Button>
-              )}
+              ))}
             </>
           )}
           <span className="flex-1" />
           <Button variant="secondary" onClick={onClose}>
             Fechar
           </Button>
-          {canEdit && (
+          {canEdit && pub?.status !== "publicando" && (
             <Button type="submit" form="form-agendamento" loading={pending}>
               Salvar
             </Button>
@@ -308,11 +353,29 @@ function PublicationModal({
         onSubmit={handleSubmit(() => act(() => savePublication(pub?.id ?? null, getValues())))}
       >
         {error && <Alert>{error}</Alert>}
+        {pub?.status === "publicando" && <Alert tone="info">Publicando agora. Em alguns minutos o resultado aparece aqui.</Alert>}
+        {pub?.last_error && pub.status !== "publicado" && (
+          <Alert>
+            {pub.status === "erro" ? "A publicação automática falhou" : `Tentativa ${pub.attempts} falhou, nova tentativa em alguns minutos`}: {pub.last_error}
+          </Alert>
+        )}
         {pub && (
           <div className="flex items-center gap-3">
             <MediaThumb media={pub.media} className="size-16 shrink-0 rounded-lg" />
             <div className="flex flex-col gap-1 text-xs">
-              <Badge tone={PUBLICATION_STATUS[pub.status].tone}>{PUBLICATION_STATUS[pub.status].label}</Badge>
+              <span className="flex flex-wrap gap-1">
+                <Badge tone={PUBLICATION_STATUS[pub.status].tone}>{PUBLICATION_STATUS[pub.status].label}</Badge>
+                {pub.auto && (
+                  <Badge tone="info">
+                    <Zap className="size-3" aria-hidden /> Automática
+                  </Badge>
+                )}
+              </span>
+              {pub.permalink && (
+                <a href={pub.permalink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 underline-offset-2 hover:underline">
+                  <ExternalLink className="size-3" aria-hidden /> Ver na rede
+                </a>
+              )}
               {pub.post_id && (
                 <Link href={`/aprovacoes?envio=${pub.post_id}`} className="inline-flex items-center gap-1 underline-offset-2 hover:underline">
                   <ExternalLink className="size-3" aria-hidden /> Ver o post na Aprovação
@@ -409,19 +472,46 @@ function Accounts({
                 <li key={a.id} className="flex flex-wrap items-center gap-3 py-2">
                   <NetworkBadge network={a.network} />
                   <span className="min-w-0 flex-1 truncate text-sm">
+                    {/* Página do Facebook tem nome, não @ */}
                     {a.profile_url ? (
                       <a href={a.profile_url} target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">
-                        @{a.username}
+                        {a.network === "facebook" && a.connection !== "manual" ? a.username : `@${a.username}`}
                       </a>
                     ) : (
                       `@${a.username}`
                     )}
                   </span>
-                  <Badge>
-                    <Link2Off className="size-3" aria-hidden /> Sem conexão automática
-                  </Badge>
+                  {a.connection === "conectada" ? (
+                    <Badge tone="success-soft">
+                      <Link2 className="size-3" aria-hidden /> Publicação automática
+                    </Badge>
+                  ) : a.connection === "erro" ? (
+                    <Badge tone="danger" title={a.last_error ?? undefined}>
+                      <AlertTriangle className="size-3" aria-hidden /> Reconecte a conta
+                    </Badge>
+                  ) : (
+                    <Badge>
+                      <Link2Off className="size-3" aria-hidden /> Sem conexão automática
+                    </Badge>
+                  )}
                   {canEdit && (
                     <span className="flex gap-1">
+                      {a.connection !== "manual" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={pending}
+                          onClick={() =>
+                            start(async () => {
+                              const r = await disconnectAccount(a.id);
+                              if (!r.ok) return setError(r.error);
+                              router.refresh();
+                            })
+                          }
+                        >
+                          <Unplug /> Desconectar
+                        </Button>
+                      )}
                       <Button size="sm" variant="ghost" onClick={() => onOpen(a)}>
                         Editar
                       </Button>
@@ -448,6 +538,85 @@ function Accounts({
         </section>
       ))}
     </div>
+  );
+}
+
+/** Depois da conexão com a Meta: a pessoa diz de qual cliente é cada Página/Instagram encontrado. */
+function LinkAccountsModal({ pending, clients, onClose }: { pending: PendingAccount[]; clients: Client[]; onClose: () => void }) {
+  const router = useRouter();
+  const [choice, setChoice] = useState<Record<string, string>>(() =>
+    Object.fromEntries(pending.map((p) => [p.key, p.suggested_client ?? ""])),
+  );
+  const [error, setError] = useState("");
+  const [busy, start] = useTransition();
+  const chosen = Object.values(choice).filter(Boolean).length;
+
+  const close = () => {
+    onClose();
+    // tira o ?conectar=1 do endereço para a janela não voltar ao recarregar
+    router.replace("/social");
+  };
+
+  return (
+    <Modal
+      open
+      onOpenChange={(v) => !v && close()}
+      title="Contas encontradas"
+      accent="na Meta"
+      description="Escolha o cliente de cada conta. As que ficarem sem cliente não são conectadas."
+      size="lg"
+      footer={
+        <>
+          <Button variant="secondary" onClick={close}>
+            Agora não
+          </Button>
+          <Button
+            loading={busy}
+            disabled={!chosen}
+            onClick={() =>
+              start(async () => {
+                const r = await linkMetaAccounts(pending.map((p) => ({ key: p.key, client_id: choice[p.key] ?? "" })));
+                if (!r.ok) return setError(r.error);
+                close();
+                router.refresh();
+              })
+            }
+          >
+            Conectar {chosen ? `${chosen} conta(s)` : ""}
+          </Button>
+        </>
+      }
+    >
+      {error && <Alert className="mb-3">{error}</Alert>}
+      <ul className="flex flex-col divide-y divide-line">
+        {pending.map((p) => (
+          <li key={p.key} className="flex flex-wrap items-center gap-3 py-2">
+            {p.picture_url ? (
+              // foto de perfil vem do CDN da Meta; sem otimização do Next
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={p.picture_url} alt="" className="size-8 shrink-0 rounded-full object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <span className="size-8 shrink-0 rounded-full bg-surface-3" aria-hidden />
+            )}
+            <NetworkBadge network={p.network} />
+            <span className="min-w-0 flex-1 truncate text-sm">{p.network === "instagram" ? `@${p.username}` : p.username}</span>
+            <Select
+              aria-label={`Cliente de ${p.username} (${NETWORKS[p.network]})`}
+              className="w-full sm:w-56"
+              value={choice[p.key] ?? ""}
+              onChange={(e) => setChoice((c) => ({ ...c, [p.key]: e.target.value }))}
+            >
+              <option value="">Não conectar</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          </li>
+        ))}
+      </ul>
+    </Modal>
   );
 }
 

@@ -39,9 +39,11 @@ export const NETWORKS: Record<SocialNetworkT, string> = {
 };
 export const NETWORK_IDS = Object.keys(NETWORKS) as SocialNetworkT[];
 
-export const PUBLICATION_STATUS: Record<PublicationStatusT, { label: string; tone: "info" | "success-soft" | "neutral" }> = {
+export const PUBLICATION_STATUS: Record<PublicationStatusT, { label: string; tone: "info" | "success-soft" | "neutral" | "danger" }> = {
   agendado: { label: "Agendado", tone: "info" },
+  publicando: { label: "Publicando", tone: "info" },
   publicado: { label: "Publicado", tone: "success-soft" },
+  erro: { label: "Falhou", tone: "danger" },
   cancelado: { label: "Cancelado", tone: "neutral" },
 };
 

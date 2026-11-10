@@ -102,3 +102,35 @@ export async function deletePublication(id: string): Promise<ActionResult> {
   refresh();
   return { ok: true };
 }
+
+// ---------- Conexão com a Meta ----------
+const linksSchema = z
+  .array(z.object({ key: z.string().regex(/^[0-9a-f]{24}$/), client_id: z.union([z.literal(""), z.string().uuid()]) }))
+  .max(300);
+
+/** Liga as contas encontradas na Meta aos clientes escolhidos (as sem cliente ficam de fora). */
+export async function linkMetaAccounts(input: unknown): Promise<ActionResult<{ linked: number }>> {
+  const ctx = await editor();
+  if (!ctx) return NO_PERMISSION;
+  const parsed = linksSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Dados inválidos." };
+  const links = parsed.data.filter((l) => l.client_id);
+  if (!links.length) return { ok: false, error: "Escolha o cliente de pelo menos uma conta." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("social_link_accounts", { a: ctx.agency.id, links });
+  if (error) return fail(error);
+  if (!data) return { ok: false, error: "A conexão expirou (vale 1 hora). Conecte com a Meta de novo." };
+  refresh();
+  return { ok: true, data: { linked: data } };
+}
+
+export async function disconnectAccount(id: string): Promise<ActionResult> {
+  const ctx = await editor();
+  if (!ctx) return NO_PERMISSION;
+  if (!uuid.safeParse(id).success) return { ok: false, error: "Conta inválida." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("social_disconnect", { acc: id });
+  if (error) return fail(error);
+  refresh();
+  return { ok: true };
+}

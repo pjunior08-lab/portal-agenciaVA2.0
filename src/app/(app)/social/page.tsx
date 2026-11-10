@@ -5,11 +5,21 @@ import { Card, EmptyState, ErrorState } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { memberCan, requireMember } from "@/lib/auth/session";
 import { signedUrls } from "@/lib/storage";
-import { SocialApp, type PublicationView } from "./social-app";
+import { metaConfigured } from "@/features/social/meta/graph";
+import { SocialApp, type PendingAccount, type PublicationView } from "./social-app";
+
+// mensagens da volta da conexão com a Meta
+const META_NOTICES: Record<string, string> = {
+  erro: "Não foi possível concluir a conexão com a Meta. Tente de novo.",
+  cancelado: "A conexão com a Meta foi cancelada.",
+  "sem-contas": "A Meta não devolveu nenhuma Página. Na conexão, marque as Páginas (e os Instagrams ligados a elas) dos clientes.",
+  "sem-permissao": "Só quem pode editar o Social conecta contas, e a conexão com a Meta precisa estar configurada no servidor.",
+};
 
 export const metadata: Metadata = { title: "Social" };
 
-export default async function SocialPage() {
+export default async function SocialPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const sp = await searchParams;
   const ctx = await requireMember();
   if (!memberCan(ctx, "social")) {
     return (
@@ -33,6 +43,14 @@ export default async function SocialPage() {
     supabase.from("clients").select("id, name, cover_color, status").eq("agency_id", ctx.agency.id).neq("status", "arquivado").order("name"),
   ]);
   const err = pubs.error ?? accounts.error;
+  const canEdit = memberCan(ctx, "social", "editar");
+  // contas encontradas na Meta esperando a escolha do cliente (só de quem acabou de conectar)
+  let pending: PendingAccount[] = [];
+  if (canEdit && sp.conectar === "1") {
+    const r = await supabase.rpc("social_pending_list", { a: ctx.agency.id });
+    pending = r.data ?? [];
+  }
+  const metaNotice = typeof sp.meta === "string" ? (META_NOTICES[sp.meta] ?? null) : null;
   if (err) return <ErrorState description="Não foi possível carregar o Social. Recarregue a página." />;
 
   const firstMedia = (p: NonNullable<typeof pubs.data>[number]) => {
@@ -60,7 +78,11 @@ export default async function SocialPage() {
       publications={views}
       accounts={accounts.data ?? []}
       clients={(clients.data ?? []).map((c) => ({ id: c.id, name: c.name, color: c.cover_color }))}
-      canEdit={memberCan(ctx, "social", "editar")}
+      canEdit={canEdit}
+      metaReady={metaConfigured()}
+      pending={pending}
+      connectReturned={sp.conectar === "1"}
+      metaNotice={metaNotice}
     />
   );
 }

@@ -17,7 +17,7 @@ type ApprovalPart = "geral" | "tema" | "midias" | "legenda";
 type ApprovalDecision = "aprovado" | "alteracoes" | "reprovado";
 type PublishMode = "manual" | "automatica";
 type SocialNetwork = "instagram" | "facebook" | "tiktok" | "youtube" | "linkedin";
-type PublicationStatus = "agendado" | "publicado" | "cancelado";
+type PublicationStatus = "agendado" | "publicado" | "cancelado" | "publicando" | "erro";
 type ProposalStatus = "rascunho" | "enviada" | "em_negociacao" | "aceita" | "recusada";
 type ItemCadence = "unica" | "mensal" | "trimestral" | "semestral" | "anual";
 type ContractStatus = "rascunho" | "aguardando" | "assinado" | "cancelado";
@@ -312,6 +312,13 @@ export type Database = {
           username: string;
           profile_url: string | null;
           token_ref: string | null;
+          connection: "manual" | "conectada" | "erro";
+          external_id: string | null;
+          page_id: string | null;
+          picture_url: string | null;
+          connected_by: string | null;
+          connected_at: string | null;
+          last_error: string | null;
           created_by: string | null;
           created_at: string;
         };
@@ -332,6 +339,13 @@ export type Database = {
           scheduled_at: string;
           status: PublicationStatus;
           published_at: string | null;
+          attempts: number;
+          last_error: string | null;
+          container_id: string | null;
+          external_id: string | null;
+          permalink: string | null;
+          claimed_at: string | null;
+          auto: boolean;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -1258,6 +1272,32 @@ export type Database = {
       };
     };
     Functions: {
+      social_store_pending: { Args: { a: string; items: Json }; Returns: number };
+      social_pending_list: {
+        Args: { a: string };
+        Returns: { key: string; network: SocialNetwork; username: string; picture_url: string | null; page_id: string | null; suggested_client: string | null }[];
+      };
+      social_link_accounts: { Args: { a: string; links: Json }; Returns: number };
+      social_disconnect: { Args: { acc: string }; Returns: undefined };
+      social_claim: {
+        Args: { secret: string };
+        Returns: {
+          id: string;
+          network: SocialNetwork;
+          caption: string;
+          container_id: string | null;
+          attempts: number;
+          account_id: string | null;
+          external_id: string | null;
+          page_id: string | null;
+          token_encrypted: string | null;
+          media: Json;
+        }[];
+      };
+      social_report: {
+        Args: { secret: string; pub: string; outcome: string; container?: string | null; media_id?: string | null; link?: string | null; error?: string | null };
+        Returns: undefined;
+      };
       chat_open_direct: { Args: { a: string; other: string }; Returns: string };
       chat_save_group: { Args: { a: string; conv: string | null; group_name: string; members: string[] }; Returns: string };
       chat_leave_group: { Args: { conv: string }; Returns: undefined };
