@@ -11,3 +11,4 @@ export * from "./month-calendar";
 export * from "./media-thumb";
 export * from "./rich-text-editor";
 export * from "./charts";
+export * from "./flow-editor";

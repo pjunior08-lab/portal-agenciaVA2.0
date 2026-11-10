@@ -204,3 +204,18 @@ test.describe("comercial: entradas públicas", () => {
     await expect(page.getByText("Formulário indisponível")).toBeVisible();
   });
 });
+
+test.describe("fase 8 sem login", () => {
+  for (const path of [
+    "/comunicacao",
+    "/mapa-mental",
+    "/funil",
+    "/mapa-mental/00000000-0000-0000-0000-000000000000",
+    "/funil/00000000-0000-0000-0000-000000000000",
+  ]) {
+    test(`${path} exige login e guarda o destino`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path)}$`));
+    });
+  }
+});

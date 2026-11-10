@@ -53,4 +53,4 @@ e2e/                      testes de fluxo
 
 ## Fases
 
-0. Fundação ✅ · 1. Autenticação e núcleo ✅ · 2. Clientes e Portal ✅ · 3. Demandas, Agenda e Meu Dia ✅ · 4. Aprovação e Social ✅ · 5. Propostas e Contratos ✅ · 6. Financeiro ✅ · 7. Comercial ✅ (funil, relatórios, importação, automações e integrações) · 8. Comunicação e Início ✅ (8A) · Mapa Mental e Funil (8B) · 9. Integrações e módulos a levantar.
+0. Fundação ✅ · 1. Autenticação e núcleo ✅ · 2. Clientes e Portal ✅ · 3. Demandas, Agenda e Meu Dia ✅ · 4. Aprovação e Social ✅ · 5. Propostas e Contratos ✅ · 6. Financeiro ✅ · 7. Comercial ✅ (funil, relatórios, importação, automações e integrações) · 8. Comunicação, Início, Mapa Mental e Funil ✅ · 9. Integrações e módulos a levantar.

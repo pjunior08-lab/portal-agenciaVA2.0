@@ -149,7 +149,7 @@ body {
   padding-left: 1.4em;
 }
 .rich-text blockquote {
-  border-left: 3px solid var(--line);
+  border-left: 3px solid var(--border);
   padding-left: 0.9em;
   color: var(--muted);
 }
@@ -157,7 +157,7 @@ body {
   text-decoration: underline;
 }
 .rich-text hr {
-  border-color: var(--line);
+  border-color: var(--border);
 }
 .rich-text p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);

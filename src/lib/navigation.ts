@@ -220,7 +220,7 @@ export const MODULES: ModuleDef[] = [
     phase: 8,
     status: "confirmado",
     summary: "Mapas mentais por cliente a partir de modelos.",
-    features: ["Em branco, planejamento de campanha, briefing de cliente, pilares de conteúdo"],
+    features: ["Mapas por cliente com salvamento automático", "Modelos: em branco, planejamento de campanha, briefing de cliente, pilares de conteúdo"],
   },
   {
     slug: "funil",
@@ -230,7 +230,7 @@ export const MODULES: ModuleDef[] = [
     phase: 8,
     status: "confirmado",
     summary: "Desenho de funis de venda e marketing.",
-    features: ["Pastas e lixeira", "Modelos de funil"],
+    features: ["Editor de etapas e ligações com salvamento automático", "Pastas e lixeira", "Modelos de funil"],
   },
   {
     slug: "comercial",

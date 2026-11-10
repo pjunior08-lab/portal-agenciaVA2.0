@@ -811,6 +811,55 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["chat_messages"]["Row"]>;
         Relationships: [];
       };
+      mind_maps: {
+        Row: {
+          id: string;
+          agency_id: string;
+          client_id: string;
+          title: string;
+          template: "em_branco" | "campanha" | "briefing" | "pilares";
+          nodes: Json;
+          edges: Json;
+          created_by: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["mind_maps"]["Row"]> & Pick<Database["public"]["Tables"]["mind_maps"]["Row"], "agency_id" | "client_id" | "title">;
+        Update: Partial<Database["public"]["Tables"]["mind_maps"]["Row"]>;
+        Relationships: [];
+      };
+      funnel_folders: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["funnel_folders"]["Row"]> & Pick<Database["public"]["Tables"]["funnel_folders"]["Row"], "agency_id" | "name">;
+        Update: Partial<Database["public"]["Tables"]["funnel_folders"]["Row"]>;
+        Relationships: [];
+      };
+      funnels: {
+        Row: {
+          id: string;
+          agency_id: string;
+          folder_id: string | null;
+          client_id: string | null;
+          name: string;
+          template: string;
+          nodes: Json;
+          edges: Json;
+          deleted_at: string | null;
+          created_by: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["funnels"]["Row"]> & Pick<Database["public"]["Tables"]["funnels"]["Row"], "agency_id" | "name">;
+        Update: Partial<Database["public"]["Tables"]["funnels"]["Row"]>;
+        Relationships: [];
+      };
       crm_stage_history: {
         Row: {
           id: string;
