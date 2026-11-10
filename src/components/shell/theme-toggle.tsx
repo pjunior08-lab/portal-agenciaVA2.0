@@ -21,10 +21,15 @@ export function ThemeToggle({ className }: { className?: string }) {
         className,
       )}
       aria-label={dark ? "Usar tema claro" : "Usar tema escuro"}
+      title={dark ? "Tema claro" : "Tema escuro"}
       data-testid="theme-toggle"
     >
-      {dark ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
-      <span>{dark ? "Tema claro" : "Tema escuro"}</span>
+      {dark ? (
+        <Sun className="size-4 shrink-0" aria-hidden />
+      ) : (
+        <Moon className="size-4 shrink-0" aria-hidden />
+      )}
+      <span className="nav-label">{dark ? "Tema claro" : "Tema escuro"}</span>
     </button>
   );
 }

@@ -14,10 +14,10 @@ export function Brand() {
         alt=""
         width={32}
         height={32}
-        className="size-8 rounded-lg"
+        className="size-8 shrink-0 rounded-lg"
         priority
       />
-      <span className="text-[13px] leading-tight font-semibold tracking-tight">
+      <span className="nav-label text-[13px] leading-tight font-semibold tracking-tight whitespace-nowrap">
         Vai Aonde
         <br />
         Capixaba<span className="text-brand-strong">?</span>

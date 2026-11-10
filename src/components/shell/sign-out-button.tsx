@@ -17,6 +17,7 @@ export function SignOutButton({
   return (
     <Button
       variant="ghost"
+      title={label}
       {...props}
       loading={loading}
       onClick={async () => {
@@ -27,7 +28,7 @@ export function SignOutButton({
       }}
     >
       <LogOut aria-hidden />
-      {label}
+      <span className="nav-label">{label}</span>
     </Button>
   );
 }
