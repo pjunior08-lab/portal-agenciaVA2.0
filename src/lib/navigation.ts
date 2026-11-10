@@ -257,7 +257,7 @@ export const MODULES: ModuleDef[] = [
     phase: 8,
     status: "confirmado",
     summary: "Chat interno e chat com clientes.",
-    features: ["Conversas diretas e grupos", "Chat com clientes pelo Portal"],
+    features: ["Conversas diretas e grupos com mensagens em tempo real e não lidas", "Chat com clientes pela seção Mensagens do Portal"],
   },
   {
     slug: "configuracoes",

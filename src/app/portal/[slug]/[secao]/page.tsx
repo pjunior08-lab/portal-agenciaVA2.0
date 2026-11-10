@@ -1,6 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BriefcaseBusiness, CalendarDays, Receipt, Clock, Download, FileSignature, FileText, Loader, StickyNote } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  CalendarDays,
+  MessageCircle,
+  Receipt,
+  Clock,
+  Download,
+  FileSignature,
+  FileText,
+  Loader,
+  StickyNote,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { signedUrls } from "@/lib/storage";
 import { getPortal } from "@/features/portal/context";
@@ -13,6 +24,8 @@ import { formatBRL } from "@/lib/utils";
 import { CADENCES, investment } from "@/features/propostas/schemas";
 import { CONTRACT_STATUS, fmtDay } from "@/features/contratos/schemas";
 import { ContractSheet } from "@/features/contratos/document";
+import { getUser } from "@/lib/auth/session";
+import { ChatThread } from "@/features/comunicacao/chat-thread";
 import { PortalApprovals, type PortalPost } from "./approvals";
 import { PortalCalendar } from "./calendar";
 import { formatBytes } from "@/lib/utils";
@@ -42,9 +55,16 @@ export default async function PortalSection({
       .eq("client_id", p.clientId)
       .eq("shared_with_client", true)
       .order("created_at", { ascending: false });
-    const urls = await signedUrls("clientes", (data ?? []).map((f) => f.path));
+    const urls = await signedUrls(
+      "clientes",
+      (data ?? []).map((f) => f.path),
+    );
     return (
-      <SectionCard title="Arquivos" icon={FileText} description="Materiais que a agência compartilhou com você.">
+      <SectionCard
+        title="Arquivos"
+        icon={FileText}
+        description="Materiais que a agência compartilhou com você."
+      >
         {!data?.length ? (
           <EmptyState icon={FileText} title="Nenhum arquivo compartilhado ainda" />
         ) : (
@@ -87,12 +107,21 @@ export default async function PortalSection({
       .order("sent_at", { ascending: false })
       .limit(200);
     if (error) return <ErrorState description="Não foi possível carregar as aprovações." />;
-    const urls = await signedUrls("aprovacoes", (data ?? []).flatMap((x) => (x.post_media ?? []).map((m) => m.path)));
+    const urls = await signedUrls(
+      "aprovacoes",
+      (data ?? []).flatMap((x) => (x.post_media ?? []).map((m) => m.path)),
+    );
     const posts: PortalPost[] = (data ?? []).map(({ post_media, approval_events, ...row }) => ({
       ...row,
       media: [...(post_media ?? [])]
         .sort((a, b) => a.position - b.position)
-        .map((m) => ({ id: m.id, name: m.name, url: urls[m.path] ?? null, mime: m.mime_type, size: m.size_bytes })),
+        .map((m) => ({
+          id: m.id,
+          name: m.name,
+          url: urls[m.path] ?? null,
+          mime: m.mime_type,
+          size: m.size_bytes,
+        })),
       // o cliente não vê nomes da equipe, só "Agência"
       events: [...(approval_events ?? [])]
         .sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -128,7 +157,11 @@ export default async function PortalSection({
                       <span className="text-xs text-muted">Vencimento {fmtDay(f.due_date)}</span>
                     </span>
                     <Badge tone={f.paid ? "success-soft" : late ? "danger" : "neutral"}>
-                      {f.paid ? `Pago${f.paid_at ? ` em ${shortDate(f.paid_at)}` : ""}` : late ? "Atrasada" : "A vencer"}
+                      {f.paid
+                        ? `Pago${f.paid_at ? ` em ${shortDate(f.paid_at)}` : ""}`
+                        : late
+                          ? "Atrasada"
+                          : "A vencer"}
                     </Badge>
                     <span className="w-28 text-right tabular-nums">{formatBRL(Number(f.amount))}</span>
                   </li>
@@ -145,28 +178,41 @@ export default async function PortalSection({
     const [contracts, proposals] = await Promise.all([
       supabase
         .from("contracts")
-        .select("id, title, status, value, starts_on, ends_on, renewal_on, rendered_html, header_text, footer_text, watermark, document_hash, signed_at")
+        .select(
+          "id, title, status, value, starts_on, ends_on, renewal_on, rendered_html, header_text, footer_text, watermark, document_hash, signed_at",
+        )
         .eq("client_id", p.clientId)
         .in("status", ["aguardando", "assinado"])
         .order("created_at", { ascending: false }),
       supabase
         .from("proposals")
-        .select("id, number, title, decided_at, proposal_items(service, quantity, unit_price, cadence, position)")
+        .select(
+          "id, number, title, decided_at, proposal_items(service, quantity, unit_price, cadence, position)",
+        )
         .eq("client_id", p.clientId)
         .eq("status", "aceita")
         .order("decided_at", { ascending: false }),
     ]);
-    if (contracts.error || proposals.error) return <ErrorState description="Não foi possível carregar seus serviços." />;
+    if (contracts.error || proposals.error)
+      return <ErrorState description="Não foi possível carregar seus serviços." />;
     const none = !contracts.data?.length && !proposals.data?.length;
     return (
       <div className="flex flex-col gap-4">
         {none && (
           <SectionCard title="Serviços" icon={BriefcaseBusiness}>
-            <EmptyState icon={BriefcaseBusiness} title="Nada por aqui ainda" description="Seus contratos e propostas aceitas aparecem aqui." />
+            <EmptyState
+              icon={BriefcaseBusiness}
+              title="Nada por aqui ainda"
+              description="Seus contratos e propostas aceitas aparecem aqui."
+            />
           </SectionCard>
         )}
         {!!proposals.data?.length && (
-          <SectionCard title="Serviços contratados" icon={BriefcaseBusiness} description="Das propostas que você aceitou.">
+          <SectionCard
+            title="Serviços contratados"
+            icon={BriefcaseBusiness}
+            description="Das propostas que você aceitou."
+          >
             <ul className="flex flex-col gap-3">
               {proposals.data.map((pr) => {
                 const items = [...(pr.proposal_items ?? [])].sort((a, b) => a.position - b.position);
@@ -186,7 +232,10 @@ export default async function PortalSection({
                       ))}
                     </ul>
                     <p className="mt-2 text-xs text-muted">
-                      Total: {investment(items).map((t) => `${formatBRL(t.total)}${CADENCES[t.cadence].suffix}`).join(" + ")}
+                      Total:{" "}
+                      {investment(items)
+                        .map((t) => `${formatBRL(t.total)}${CADENCES[t.cadence].suffix}`)
+                        .join(" + ")}
                     </p>
                   </li>
                 );
@@ -204,21 +253,32 @@ export default async function PortalSection({
                       <span className="min-w-0 flex-1">
                         <span className="block font-medium">{ct.title}</span>
                         <span className="block text-xs text-muted">
-                          {ct.starts_on ? `${fmtDay(ct.starts_on)} a ${ct.ends_on ? fmtDay(ct.ends_on) : "prazo indeterminado"}` : "Vigência a definir"}
+                          {ct.starts_on
+                            ? `${fmtDay(ct.starts_on)} a ${ct.ends_on ? fmtDay(ct.ends_on) : "prazo indeterminado"}`
+                            : "Vigência a definir"}
                           {ct.value != null && ` · ${formatBRL(ct.value)}`}
                         </span>
                       </span>
                       <Badge tone={CONTRACT_STATUS[ct.status].tone}>{CONTRACT_STATUS[ct.status].label}</Badge>
-                      <span className="text-xs text-muted underline-offset-2 hover:underline">Ver contrato</span>
+                      <span className="text-xs text-muted underline-offset-2 hover:underline">
+                        Ver contrato
+                      </span>
                     </summary>
                     <div className="mt-3 flex flex-col gap-3">
-                      <ContractSheet html={cleanHtml(ct.rendered_html)} header={ct.header_text} footer={ct.footer_text} watermark={ct.watermark} />
+                      <ContractSheet
+                        html={cleanHtml(ct.rendered_html)}
+                        header={ct.header_text}
+                        footer={ct.footer_text}
+                        watermark={ct.watermark}
+                      />
                       <p className="text-[11px] break-all text-muted">
                         {ct.signed_at ? `Assinado pelas duas partes em ${fmtDay(dayOf(ct.signed_at))}. ` : ""}
                         Código do documento (SHA-256): <span className="font-mono">{ct.document_hash}</span>
                       </p>
                       {ct.status === "aguardando" && (
-                        <p className="text-xs text-muted">Para assinar, use o link de assinatura que a agência enviou.</p>
+                        <p className="text-xs text-muted">
+                          Para assinar, use o link de assinatura que a agência enviou.
+                        </p>
                       )}
                     </div>
                   </details>
@@ -269,8 +329,16 @@ export default async function PortalSection({
         })),
     ];
     return (
-      <SectionCard title="Calendário" icon={CalendarDays} description="Publicações previstas e já feitas pela agência.">
-        {items.length === 0 ? <EmptyState icon={CalendarDays} title="Nada agendado ainda" /> : <PortalCalendar items={items} />}
+      <SectionCard
+        title="Calendário"
+        icon={CalendarDays}
+        description="Publicações previstas e já feitas pela agência."
+      >
+        {items.length === 0 ? (
+          <EmptyState icon={CalendarDays} title="Nada agendado ainda" />
+        ) : (
+          <PortalCalendar items={items} />
+        )}
       </SectionCard>
     );
   }
@@ -280,14 +348,22 @@ export default async function PortalSection({
     const { data, error } = await supabase.rpc("portal_tasks_in_progress", { c: p.clientId });
     if (error) return <ErrorState description="Não foi possível carregar o que está em andamento." />;
     return (
-      <SectionCard title="Em andamento" icon={Loader} description="O que a agência está produzindo para você agora.">
+      <SectionCard
+        title="Em andamento"
+        icon={Loader}
+        description="O que a agência está produzindo para você agora."
+      >
         {!data?.length ? (
           <EmptyState icon={Loader} title="Nada em andamento no momento" />
         ) : (
           <ul className="flex flex-col gap-1.5">
             {data.map((t) => (
               <li key={t.id} className="flex items-center gap-3 rounded-xl bg-surface-2 px-3 py-2.5">
-                <span className="size-2.5 shrink-0 rounded-full" style={{ background: t.column_color }} aria-hidden />
+                <span
+                  className="size-2.5 shrink-0 rounded-full"
+                  style={{ background: t.column_color }}
+                  aria-hidden
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm">{t.title}</p>
                   <p className="text-[11px] text-muted">
@@ -303,6 +379,41 @@ export default async function PortalSection({
     );
   }
 
+  if (section.id === "mensagens") {
+    const user = await getUser();
+    const { data: conv, error } = await supabase.rpc("chat_client_conversation", { c: p.clientId });
+    if (error || !conv || !user)
+      return <ErrorState description="Não foi possível abrir as mensagens agora. Recarregue a página." />;
+    const { data } = await supabase
+      .from("chat_messages")
+      .select("id, conversation_id, author_id, author_name, body, created_at, deleted_at")
+      .eq("conversation_id", conv)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    return (
+      <section
+        aria-label="Mensagens"
+        className="flex h-[calc(100dvh-12rem)] min-h-[420px] flex-col overflow-hidden rounded-card bg-surface"
+      >
+        <header className="flex items-center gap-2 border-b border-line px-4 py-3">
+          <MessageCircle className="size-4 text-muted" aria-hidden />
+          <div>
+            <h1 className="text-sm font-semibold">Mensagens</h1>
+            <p className="text-[11px] text-muted">Converse com a equipe da agência por aqui.</p>
+          </div>
+        </header>
+        <ChatThread
+          conversationId={conv}
+          me={user.id}
+          initial={(data ?? []).reverse()}
+          hasMore={(data ?? []).length === 50}
+          canPost
+          placeholder="Escreva para a agência…"
+        />
+      </section>
+    );
+  }
+
   if (section.id === "anotacoes") {
     const { data } = await supabase
       .from("client_notes")
@@ -311,7 +422,11 @@ export default async function PortalSection({
       .eq("shared_with_client", true)
       .order("created_at", { ascending: false });
     return (
-      <SectionCard title="Anotações" icon={StickyNote} description="Recados e registros da agência para você.">
+      <SectionCard
+        title="Anotações"
+        icon={StickyNote}
+        description="Recados e registros da agência para você."
+      >
         {!data?.length ? (
           <EmptyState icon={StickyNote} title="Nenhuma anotação compartilhada ainda" />
         ) : (

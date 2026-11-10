@@ -766,6 +766,51 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["crm_forms"]["Row"]>;
         Relationships: [];
       };
+      chat_conversations: {
+        Row: {
+          id: string;
+          agency_id: string;
+          kind: "direta" | "grupo" | "cliente";
+          name: string | null;
+          client_id: string | null;
+          dm_key: string | null;
+          created_by: string | null;
+          created_at: string;
+          last_message_at: string | null;
+          last_message_preview: string | null;
+        };
+        Insert: Partial<Database["public"]["Tables"]["chat_conversations"]["Row"]> & Pick<Database["public"]["Tables"]["chat_conversations"]["Row"], "agency_id" | "kind">;
+        Update: Partial<Database["public"]["Tables"]["chat_conversations"]["Row"]>;
+        Relationships: [];
+      };
+      chat_participants: {
+        Row: {
+          conversation_id: string;
+          user_id: string;
+          agency_id: string;
+          member: boolean;
+          last_read_at: string | null;
+          joined_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["chat_participants"]["Row"]> & Pick<Database["public"]["Tables"]["chat_participants"]["Row"], "conversation_id" | "user_id" | "agency_id">;
+        Update: Partial<Database["public"]["Tables"]["chat_participants"]["Row"]>;
+        Relationships: [];
+      };
+      chat_messages: {
+        Row: {
+          id: string;
+          conversation_id: string;
+          agency_id: string;
+          author_id: string | null;
+          author_name: string | null;
+          body: string;
+          created_at: string;
+          deleted_at: string | null;
+        };
+        Insert: Partial<Database["public"]["Tables"]["chat_messages"]["Row"]> & Pick<Database["public"]["Tables"]["chat_messages"]["Row"], "conversation_id" | "body">;
+        Update: Partial<Database["public"]["Tables"]["chat_messages"]["Row"]>;
+        Relationships: [];
+      };
       crm_stage_history: {
         Row: {
           id: string;
@@ -1164,6 +1209,12 @@ export type Database = {
       };
     };
     Functions: {
+      chat_open_direct: { Args: { a: string; other: string }; Returns: string };
+      chat_save_group: { Args: { a: string; conv: string | null; group_name: string; members: string[] }; Returns: string };
+      chat_leave_group: { Args: { conv: string }; Returns: undefined };
+      chat_client_conversation: { Args: { c: string }; Returns: string };
+      chat_mark_read: { Args: { conv: string }; Returns: undefined };
+      chat_unread: { Args: { a: string }; Returns: { conversation_id: string; unread: number }[] };
       crm_api_create_lead: { Args: { api_key: string; payload: Json }; Returns: Json };
       crm_form_public: { Args: { form_token: string }; Returns: Json };
       crm_form_submit: { Args: { form_token: string; payload: Json; ip_hash: string | null }; Returns: boolean };

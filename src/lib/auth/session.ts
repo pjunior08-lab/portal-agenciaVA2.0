@@ -66,6 +66,13 @@ export const getMemberContext = cache(async (): Promise<MemberContext | null> =>
   };
 });
 
+/** Exige usuário logado (equipe ou cliente do Portal); senão manda para o login. */
+export async function requireUser(): Promise<SessionUser> {
+  const user = await getUser();
+  if (!user) redirect("/login");
+  return user;
+}
+
 /** Exige membro ativo; senão manda para o login ou para a tela de boas-vindas. */
 export async function requireMember(): Promise<MemberContext> {
   const ctx = await getMemberContext();
