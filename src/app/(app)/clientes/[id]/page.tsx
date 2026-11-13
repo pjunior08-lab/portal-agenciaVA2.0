@@ -18,6 +18,8 @@ import { FinancePanel } from "./finance-panel";
 import { today } from "@/lib/dates";
 import { StrategyPanel } from "./strategy-panel";
 import { PortalPanel } from "./portal-panel";
+import { RedesPanel } from "./redes-panel";
+import { metaConfigured } from "@/features/social/meta/graph";
 
 export const metadata: Metadata = { title: "Cliente" };
 
@@ -27,6 +29,7 @@ const TABS = [
   { id: "arquivos", label: "Arquivos" },
   { id: "estrategia", label: "Central Estratégica" },
   { id: "portal", label: "Portal do Cliente" },
+  { id: "redes", label: "Redes sociais" },
   // abas cujo conteúdo depende de módulos de fases seguintes
   { id: "conteudo", label: "Conteúdo", phase: 4, depends: "Aprovação e Social" },
   { id: "metricas", label: "Métricas", phase: 9, depends: "integrações com as redes" },
@@ -39,9 +42,9 @@ export default async function ClientePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ aba?: string }>;
+  searchParams: Promise<{ aba?: string; conectar?: string; meta?: string }>;
 }) {
-  const [{ id }, { aba }] = await Promise.all([params, searchParams]);
+  const [{ id }, { aba, conectar, meta }] = await Promise.all([params, searchParams]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const ctx = await requireMember();
   if (!memberCan(ctx, "clientes")) notFound();
@@ -199,6 +202,41 @@ export default async function ClientePage({
           status={client.status}
           receipts={(data ?? []).map((t) => ({ ...t, amount: Number(t.amount) }))}
           today={today()}
+        />
+      );
+      break;
+    }
+    case "redes": {
+      const canSocial = memberCan(ctx, "social", "editar");
+      const [{ data: accounts }, pending] = await Promise.all([
+        supabase
+          .from("social_accounts")
+          .select("id, network, username, profile_url, picture_url, connection, connected_at, last_error")
+          .eq("client_id", id)
+          .order("network"),
+        // contas que a Meta devolveu e esperam confirmação (só de quem acabou de conectar)
+        canSocial && conectar === "1"
+          ? supabase.rpc("social_pending_list", { a: client.agency_id })
+          : Promise.resolve({ data: [] }),
+      ]);
+      // nomes dos clientes para avisar quando uma conta já é de outro
+      const otherIds = [...new Set((pending.data ?? []).map((p) => p.suggested_client).filter((c): c is string => !!c && c !== id))];
+      const { data: others } = otherIds.length
+        ? await supabase.from("clients").select("id, name").in("id", otherIds)
+        : { data: [] as { id: string; name: string }[] };
+      body = (
+        <RedesPanel
+          clientId={id}
+          clientName={client.name}
+          canEdit={canSocial}
+          metaReady={metaConfigured()}
+          accounts={accounts ?? []}
+          pending={(pending.data ?? []).map((p) => ({
+            ...p,
+            otherClient: p.suggested_client && p.suggested_client !== id ? (others ?? []).find((o) => o.id === p.suggested_client)?.name ?? "outro cliente" : null,
+          }))}
+          connectReturned={conectar === "1"}
+          metaError={meta ?? null}
         />
       );
       break;

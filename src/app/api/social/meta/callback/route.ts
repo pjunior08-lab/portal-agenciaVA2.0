@@ -12,9 +12,13 @@ const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(
 /** Volta da Meta: troca o código pela chave, lista Páginas e Instagrams e guarda para a pessoa escolher o cliente de cada um. */
 export async function GET(req: NextRequest) {
   const site = await siteUrl();
+  // conexão começada no perfil de um cliente: volta para lá
+  const clientCookie = req.cookies.get("meta_oauth_client")?.value ?? "";
+  const clientId = /^[0-9a-f-]{36}$/i.test(clientCookie) ? clientCookie : null;
   const back = (q: string) => {
-    const res = NextResponse.redirect(`${site}/social?${q}`);
+    const res = NextResponse.redirect(clientId ? `${site}/clientes/${clientId}?aba=redes&${q}` : `${site}/social?${q}`);
     res.cookies.delete({ name: "meta_oauth_state", path: "/api/social/meta" });
+    res.cookies.delete({ name: "meta_oauth_client", path: "/api/social/meta" });
     return res;
   };
   const ctx = await getMemberContext();

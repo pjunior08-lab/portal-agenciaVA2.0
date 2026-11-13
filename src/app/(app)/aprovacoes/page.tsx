@@ -25,7 +25,7 @@ export default async function AprovacoesPage() {
   const canEdit = memberCan(ctx, "aprovacoes", "editar");
   const supabase = await createClient();
 
-  const [posts, clients, templates, tasks, people, portals] = await Promise.all([
+  const [posts, clients, templates, tasks, people, portals, destinations] = await Promise.all([
     supabase
       .from("posts")
       .select("*, post_media(id, name, path, mime_type, size_bytes, position), approval_events(id, actor_id, actor_side, event, part, decision, round, comment, created_at), social_publications(id)")
@@ -44,6 +44,12 @@ export default async function AprovacoesPage() {
       .limit(300),
     supabase.from("profiles").select("id, full_name, email"),
     supabase.from("client_portal").select("client_id, slug, sections, enabled").eq("agency_id", ctx.agency.id),
+    // contas conectadas de cada cliente: mostram no envio para onde o post vai sair
+    supabase
+      .from("social_accounts")
+      .select("client_id, network, username, connection")
+      .eq("agency_id", ctx.agency.id)
+      .neq("connection", "manual"),
   ]);
   if (posts.error) return <ErrorState description="Não foi possível carregar as aprovações. Recarregue a página." />;
 
@@ -83,6 +89,7 @@ export default async function AprovacoesPage() {
       templates={templates.data ?? []}
       tasks={(tasks.data ?? []).map((t) => ({ id: t.id, title: t.title, type: t.type, caption: t.caption, client_id: t.client_id as string }))}
       portals={(portals.data ?? []).map((p) => ({ client_id: p.client_id, slug: p.slug, approvals: p.enabled && p.sections.includes("aprovacoes") }))}
+      destinations={destinations.data ?? []}
       agencyId={ctx.agency.id}
       canEdit={canEdit}
       canSchedule={memberCan(ctx, "social", "editar")}

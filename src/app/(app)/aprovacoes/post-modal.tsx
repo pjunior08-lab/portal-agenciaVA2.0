@@ -28,12 +28,14 @@ export interface PostModalProps {
   templates: { id: string; title: string; body: string; client_id: string | null }[];
   tasks: { id: string; title: string; type: "post" | "demanda"; caption: string; client_id: string }[];
   portals: { client_id: string; slug: string; approvals: boolean }[];
+  /** contas conectadas (Instagram/Facebook) de cada cliente */
+  destinations: { client_id: string; network: string; username: string; connection: string }[];
   canEdit: boolean;
   canSchedule: boolean;
   onClose: () => void;
 }
 
-export function PostModal({ post, kind, agencyId, clients, templates, tasks, portals, canEdit, canSchedule, onClose }: PostModalProps) {
+export function PostModal({ post, kind, agencyId, clients, templates, tasks, portals, destinations, canEdit, canSchedule, onClose }: PostModalProps) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
@@ -352,9 +354,12 @@ export function PostModal({ post, kind, agencyId, clients, templates, tasks, por
                   </Field>
                 </div>
                 {publishMode === "automatica" && (
-                  <p className="-mt-2 text-[11px] text-muted">
-                    Quando o cliente aprovar, o post entra sozinho no calendário do Social na data acima. A publicação nas redes chega com as integrações.
-                  </p>
+                  <Destinations
+                    clientId={post?.client_id ?? clientId}
+                    clientName={clients.find((c) => c.id === (post?.client_id ?? clientId))?.name ?? ""}
+                    networks={networks}
+                    destinations={destinations}
+                  />
                 )}
               </>
             )}
@@ -501,5 +506,48 @@ export function PostModal({ post, kind, agencyId, clients, templates, tasks, por
         )}
       </div>
     </Modal>
+  );
+}
+
+/** Para onde o post vai sair: as contas salvas no perfil do cliente (nunca de outro cliente). */
+function Destinations({
+  clientId,
+  clientName,
+  networks,
+  destinations,
+}: {
+  clientId: string;
+  clientName: string;
+  networks: string[];
+  destinations: PostModalProps["destinations"];
+}) {
+  if (!clientId) return <p className="-mt-2 text-[11px] text-muted">Escolha o cliente para ver onde o post vai sair.</p>;
+  return (
+    <div className="-mt-1 rounded-xl bg-surface-2 p-3 text-xs">
+      <p className="mb-2 font-medium">Quando {clientName} aprovar, sai sozinho na data acima em:</p>
+      <ul className="flex flex-col gap-1.5">
+        {networks.map((n) => {
+          const auto = n === "instagram" || n === "facebook";
+          const acc = destinations.find((d) => d.client_id === clientId && d.network === n);
+          return (
+            <li key={n} className="flex flex-wrap items-center gap-2">
+              <span className="w-20 shrink-0 font-medium">{NETWORKS[n as keyof typeof NETWORKS]}</span>
+              {!auto ? (
+                <span className="text-muted">publicação manual (entra no calendário do Social)</span>
+              ) : acc && acc.connection === "conectada" ? (
+                <Badge tone="success-soft">{n === "instagram" ? `@${acc.username}` : acc.username}</Badge>
+              ) : (
+                <span className="text-danger">
+                  {acc ? "conta precisa ser reconectada" : "sem conta conectada"} ·{" "}
+                  <Link href={`/clientes/${clientId}?aba=redes`} className="underline" target="_blank">
+                    conectar no perfil do cliente
+                  </Link>
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
