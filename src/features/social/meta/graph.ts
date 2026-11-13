@@ -55,7 +55,11 @@ export function oauthUrl(state: string, redirectUri: string) {
   u.searchParams.set("redirect_uri", redirectUri);
   u.searchParams.set("state", state);
   u.searchParams.set("response_type", "code");
-  u.searchParams.set("scope", META_SCOPES.join(","));
+  // "Login do Facebook para Empresas" usa uma configuração (META_CONFIG_ID) com as permissões escolhidas no painel da Meta;
+  // sem ela, pede as permissões direto (login clássico)
+  const configId = process.env.META_CONFIG_ID;
+  if (configId) u.searchParams.set("config_id", configId);
+  else u.searchParams.set("scope", META_SCOPES.join(","));
   return u.toString();
 }
 
