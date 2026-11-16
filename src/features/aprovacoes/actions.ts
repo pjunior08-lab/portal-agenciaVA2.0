@@ -32,7 +32,8 @@ function refresh() {
 }
 
 // ---------- Envios ----------
-export async function savePost(id: string | null, input: unknown): Promise<ActionResult<{ id: string }>> {
+/** Cria ou edita. Com draft=true, um envio novo fica como rascunho (o cliente ainda não vê). */
+export async function savePost(id: string | null, input: unknown, draft = false): Promise<ActionResult<{ id: string }>> {
   const ctx = await editor();
   if (!ctx) return NO_PERMISSION;
   if (id !== null && !uuid.safeParse(id).success) return { ok: false, error: "Envio inválido." };
@@ -65,10 +66,14 @@ export async function savePost(id: string | null, input: unknown): Promise<Actio
 
   const { data, error } = await supabase
     .from("posts")
-    .insert({ agency_id: ctx.agency.id, created_by: ctx.userId, ...v })
+    .insert({ agency_id: ctx.agency.id, created_by: ctx.userId, ...v, ...(draft ? { status: "rascunho" as const } : {}) })
     .select("id, round")
     .single();
   if (error || !data) return fail(error);
+  if (draft) {
+    refresh();
+    return { ok: true, data: { id: data.id } };
+  }
   await supabase.from("approval_events").insert({
     agency_id: ctx.agency.id,
     post_id: data.id,
@@ -79,6 +84,33 @@ export async function savePost(id: string | null, input: unknown): Promise<Actio
   });
   refresh();
   return { ok: true, data: { id: data.id } };
+}
+
+/** Rascunho pronto: manda para o cliente (a partir daqui ele vê no portal). */
+export async function sendDraft(id: string): Promise<ActionResult> {
+  const ctx = await editor();
+  if (!ctx) return NO_PERMISSION;
+  if (!uuid.safeParse(id).success) return { ok: false, error: "Envio inválido." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .update({ status: "enviado" })
+    .eq("id", id)
+    .eq("agency_id", ctx.agency.id)
+    .eq("status", "rascunho")
+    .select("id, round");
+  if (error) return fail(error);
+  if (!data?.length) return { ok: false, error: "Este envio não é mais rascunho." };
+  await supabase.from("approval_events").insert({
+    agency_id: ctx.agency.id,
+    post_id: id,
+    actor_id: ctx.userId,
+    actor_side: "equipe",
+    event: "enviado",
+    round: data[0].round,
+  });
+  refresh();
+  return { ok: true };
 }
 
 /** Depois da decisão do cliente, reenvia o mesmo envio numa nova rodada. */

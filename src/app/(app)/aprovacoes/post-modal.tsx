@@ -6,7 +6,7 @@ import { useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
-import { CalendarPlus, ExternalLink, History, ImagePlus, RotateCcw, Trash2, X } from "lucide-react";
+import { CalendarPlus, ExternalLink, History, ImagePlus, RotateCcw, Send, Trash2, X } from "lucide-react";
 import { Alert, Badge, Button, Field, Input, MediaThumb, Modal, SegmentedControl, Select, Textarea } from "@/components/ui";
 import { cn, formatBytes } from "@/lib/utils";
 import { isoToLocalInput } from "@/lib/dates";
@@ -15,7 +15,7 @@ import { safeFileName } from "@/features/clientes/schemas";
 import { CAPTION_LIMIT, INSTAGRAM_LIMIT } from "@/features/demandas/schemas";
 import { DECISIONS, NETWORKS, NETWORK_IDS, PARTS, postSchema, type PostFormValues } from "@/features/aprovacoes/schemas";
 import { ApprovalStatusBadge, DecisionBadge, formatDateTime } from "@/features/aprovacoes/ui";
-import { deletePost, deletePostMedia, registerPostMedia, resendPost, savePost, schedulePost } from "@/features/aprovacoes/actions";
+import { deletePost, deletePostMedia, registerPostMedia, resendPost, savePost, schedulePost, sendDraft } from "@/features/aprovacoes/actions";
 import type { PostView } from "@/features/aprovacoes/types";
 
 const MAX_MEDIA_BYTES = 100 * 1024 * 1024;
@@ -109,12 +109,20 @@ export function PostModal({ post, kind, agencyId, clients, templates, tasks, por
       router.refresh();
     });
 
+  // "send" decide o que acontece depois de salvar: rascunho novo, envio direto ou enviar o rascunho
+  const submitAs = useRef<"save" | "draft" | "send">("save");
   const onSubmit = handleSubmit(() =>
     start(async () => {
       setError("");
+      const mode = submitAs.current;
+      submitAs.current = "save";
       // envia os valores do formulário; a ação valida de novo no servidor com o mesmo esquema
-      const r = await savePost(post?.id ?? null, getValues());
+      const r = await savePost(post?.id ?? null, getValues(), !post && mode === "draft");
       if (!r.ok) return setError(r.error);
+      if (post?.status === "rascunho" && mode === "send") {
+        const s = await sendDraft(post.id);
+        if (!s.ok) return setError(s.error);
+      }
       if (pendingFiles.length && r.data) {
         const failed = await uploadFiles(r.data.id, pendingFiles);
         if (failed) {
@@ -187,9 +195,14 @@ export function PostModal({ post, kind, agencyId, clients, templates, tasks, por
           <Button variant="secondary" onClick={onClose}>
             {canEdit ? "Cancelar" : "Fechar"}
           </Button>
+          {canEdit && (!post || post.status === "rascunho") && (
+            <Button type="submit" form="form-envio" variant="secondary" disabled={pending} onClick={() => (submitAs.current = post ? "save" : "draft")}>
+              {post ? "Salvar rascunho" : "Salvar como rascunho"}
+            </Button>
+          )}
           {canEdit && (
-            <Button type="submit" form="form-envio" loading={pending}>
-              {post ? "Salvar" : "Enviar para aprovação"}
+            <Button type="submit" form="form-envio" loading={pending} onClick={() => (submitAs.current = "send")}>
+              {!post ? "Enviar para aprovação" : post.status === "rascunho" ? <><Send /> Enviar ao cliente</> : "Salvar"}
             </Button>
           )}
         </div>

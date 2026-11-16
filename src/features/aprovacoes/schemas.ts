@@ -9,13 +9,14 @@ import type {
 import { localInputToIso } from "@/lib/dates";
 
 export const STATUS: Record<ApprovalStatusT, { label: string; tone: "neutral" | "brand" | "info" | "success-soft" | "danger"; color: string }> = {
+  rascunho: { label: "Rascunho", tone: "neutral", color: "var(--muted-2)" },
   enviado: { label: "Enviado", tone: "info", color: "var(--info)" },
   em_analise: { label: "Cliente analisando", tone: "brand", color: "var(--brand)" },
   aprovado: { label: "Aprovado", tone: "success-soft", color: "var(--success)" },
   alteracoes: { label: "Alterações", tone: "neutral", color: "var(--warning)" },
   reprovado: { label: "Reprovado", tone: "danger", color: "var(--danger)" },
 };
-export const STATUS_ORDER: ApprovalStatusT[] = ["enviado", "em_analise", "alteracoes", "reprovado", "aprovado"];
+export const STATUS_ORDER: ApprovalStatusT[] = ["rascunho", "enviado", "em_analise", "alteracoes", "reprovado", "aprovado"];
 
 export const DECISIONS: Record<ApprovalDecisionT, string> = {
   aprovado: "Aprovado",
