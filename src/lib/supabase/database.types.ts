@@ -1420,6 +1420,20 @@ export type Database = {
       };
       accept_client_invitation: { Args: { token: string }; Returns: string };
       share_client_strategy: { Args: { c: string }; Returns: string };
+      performance_report: {
+        Args: { a: string; month: string };
+        Returns: {
+          user_id: string;
+          full_name: string | null;
+          delivered: number;
+          with_due: number;
+          on_time: number;
+          open_overdue: number;
+          posts_decided: number;
+          approved_first: number;
+          avg_approval_hours: number | null;
+        }[];
+      };
       unshare_client_strategy: { Args: { c: string }; Returns: undefined };
       shared_client_strategy: {
         Args: { token: string };

@@ -298,9 +298,9 @@ export const MODULES: ModuleDef[] = [
     icon: BarChart3,
     group: "mais",
     phase: 10,
-    status: "a-levantar",
-    summary: "Telas ainda precisam ser levantadas.",
-    features: [],
+    status: "confirmado",
+    summary: "Números do mês por pessoa, tirados de Demandas e Aprovações.",
+    features: ["Demandas entregues e no prazo", "Posts aprovados de primeira e tempo de aprovação", "Administrador vê a equipe; colaborador vê só os próprios números"],
   },
 ];
 
