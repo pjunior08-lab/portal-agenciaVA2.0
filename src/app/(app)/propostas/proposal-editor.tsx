@@ -5,8 +5,25 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Copy, FileSignature, Link2, Plus, Save, Trash2 } from "lucide-react";
-import { Alert, Badge, Button, buttonVariants, Field, Input, Modal, RichTextEditor, SectionCard, Select, Textarea } from "@/components/ui";
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Copy, FileSignature, Link2, Plus, Save, Tags, Trash2 } from "lucide-react";
+import {
+  Alert,
+  Badge,
+  Button,
+  buttonVariants,
+  Field,
+  Input,
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuTrigger,
+  Modal,
+  RichTextEditor,
+  SectionCard,
+  Select,
+  Textarea,
+} from "@/components/ui";
+import { serviceToProposalItem } from "@/features/servicos/schemas";
 import { cn, formatBRL } from "@/lib/utils";
 import { parseMoney } from "@/features/clientes/schemas";
 import {
@@ -39,6 +56,7 @@ export function ProposalEditor({
   clients,
   templates,
   services,
+  catalog,
   canEdit,
   canContract,
   meta,
@@ -48,6 +66,8 @@ export function ProposalEditor({
   clients: { id: string; name: string; contact_name: string | null; email: string | null; phone: string | null }[];
   templates: EditorTemplate[];
   services: string[];
+  /** Tabela de Serviços (ativos) */
+  catalog: { id: string; name: string; cadence: EditorInitial["items"][number]["cadence"]; unit_price: number; scope_html: string }[];
   canEdit: boolean;
   canContract: boolean;
   meta: {
@@ -326,9 +346,29 @@ export function ProposalEditor({
               })}
             </ol>
             {canEdit && (
-              <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={() => append(emptyItem())}>
-                <Plus /> Adicionar item
-              </Button>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button type="button" variant="secondary" size="sm" onClick={() => append(emptyItem())}>
+                  <Plus /> Adicionar item
+                </Button>
+                {catalog.length > 0 && (
+                  <Menu>
+                    <MenuTrigger className={buttonVariants({ variant: "secondary", size: "sm" })}>
+                      <Tags /> Da tabela de serviços
+                    </MenuTrigger>
+                    <MenuContent align="start" className="max-h-80 overflow-y-auto">
+                      {catalog.map((s) => (
+                        <MenuItem key={s.id} onSelect={() => append(serviceToProposalItem(s))}>
+                          <span className="flex-1">{s.name}</span>
+                          <span className="text-xs text-muted tabular-nums">
+                            {formatBRL(s.unit_price)}
+                            {CADENCES[s.cadence].suffix}
+                          </span>
+                        </MenuItem>
+                      ))}
+                    </MenuContent>
+                  </Menu>
+                )}
+              </div>
             )}
           </SectionCard>
 

@@ -269,25 +269,37 @@ export const MODULES: ModuleDef[] = [
   },
   // Mais áreas. Cortadas em 23/11 por não fazerem parte da operação (decisão da agência):
   // Projetos, Squads, Notas (existe Anotações no cliente), Drive (existe Arquivos no cliente),
-  // Timesheet e Ferramentas. Onboarding virou um modelo de Checklist.
-  ...(
-    [
-      ["servicos", "Tabela de Serviços", Tags],
-      ["checklist", "Checklist", ListChecks],
-      ["desempenho", "Desempenho", BarChart3],
-    ] as const
-  ).map(
-    ([slug, label, icon]): ModuleDef => ({
-      slug,
-      label,
-      icon,
-      group: "mais",
-      phase: 9,
-      status: "a-levantar",
-      summary: "Telas ainda precisam ser levantadas.",
-      features: [],
-    }),
-  ),
+  // Timesheet e Ferramentas. Onboarding virou o modelo de Checklist "Cliente novo".
+  {
+    slug: "servicos",
+    label: "Tabela de Serviços",
+    icon: Tags,
+    group: "mais",
+    phase: 10,
+    status: "confirmado",
+    summary: "Catálogo dos serviços da agência, usado nas Propostas.",
+    features: ["Serviço com preço base, cobrança e o que inclui", "Ativar/desativar e ordenar", "Escolher da tabela ao montar proposta"],
+  },
+  {
+    slug: "checklist",
+    label: "Checklist",
+    icon: ListChecks,
+    group: "mais",
+    phase: 10,
+    status: "confirmado",
+    summary: "Modelos de checklist aplicados nas demandas e no perfil do cliente.",
+    features: ["Modelos com itens (um por linha)", "Aplicar em demanda ou cliente e marcar itens", "Modelos sugeridos: Antes de publicar, Cliente novo, Fechamento do mês"],
+  },
+  {
+    slug: "desempenho",
+    label: "Desempenho",
+    icon: BarChart3,
+    group: "mais",
+    phase: 10,
+    status: "a-levantar",
+    summary: "Telas ainda precisam ser levantadas.",
+    features: [],
+  },
 ];
 
 export const GROUP_LABELS: Record<NavGroup, string> = {

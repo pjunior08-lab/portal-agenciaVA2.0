@@ -15,14 +15,23 @@ export interface EditorTemplate {
 /** Dados de apoio do editor de proposta: clientes, modelos e serviços já usados. */
 export async function loadEditorData(ctx: MemberContext) {
   const supabase = await createClient();
-  const [clients, templates, services] = await Promise.all([
+  const [clients, templates, services, catalog] = await Promise.all([
     supabase.from("clients").select("id, name, contact_name, email, phone").eq("agency_id", ctx.agency.id).neq("status", "arquivado").order("name"),
     supabase.from("proposal_templates").select("id, name, title, cover, items, payment, notes").eq("agency_id", ctx.agency.id).order("name"),
     supabase.from("proposal_items").select("service").eq("agency_id", ctx.agency.id).limit(1000),
+    // Tabela de Serviços: só os ativos
+    supabase
+      .from("services")
+      .select("id, name, cadence, unit_price, scope_html")
+      .eq("agency_id", ctx.agency.id)
+      .eq("active", true)
+      .order("position")
+      .order("name"),
   ]);
   return {
     clients: clients.data ?? [],
     templates: (templates.data ?? []) as EditorTemplate[],
+    catalog: (catalog.data ?? []).map((s) => ({ ...s, unit_price: Number(s.unit_price) })),
     services: [...new Set((services.data ?? []).map((s) => s.service))].sort((a, b) => a.localeCompare(b, "pt-BR")),
   };
 }

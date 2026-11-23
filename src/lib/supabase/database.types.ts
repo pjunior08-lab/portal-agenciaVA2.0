@@ -825,6 +825,58 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["chat_messages"]["Row"]>;
         Relationships: [];
       };
+      services: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          description: string;
+          cadence: ItemCadence;
+          unit_price: number;
+          scope_html: string;
+          active: boolean;
+          position: number;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["services"]["Row"]> & Pick<Database["public"]["Tables"]["services"]["Row"], "agency_id" | "name">;
+        Update: Partial<Database["public"]["Tables"]["services"]["Row"]>;
+        Relationships: [];
+      };
+      checklist_templates: {
+        Row: {
+          id: string;
+          agency_id: string;
+          name: string;
+          description: string;
+          applies_to: "demanda" | "cliente";
+          items: Json;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["checklist_templates"]["Row"]> & Pick<Database["public"]["Tables"]["checklist_templates"]["Row"], "agency_id" | "name" | "items">;
+        Update: Partial<Database["public"]["Tables"]["checklist_templates"]["Row"]>;
+        Relationships: [];
+      };
+      checklists: {
+        Row: {
+          id: string;
+          agency_id: string;
+          template_id: string | null;
+          name: string;
+          task_id: string | null;
+          client_id: string | null;
+          items: Json;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["checklists"]["Row"]> & Pick<Database["public"]["Tables"]["checklists"]["Row"], "agency_id" | "name" | "items">;
+        Update: Partial<Database["public"]["Tables"]["checklists"]["Row"]>;
+        Relationships: [];
+      };
       mind_maps: {
         Row: {
           id: string;

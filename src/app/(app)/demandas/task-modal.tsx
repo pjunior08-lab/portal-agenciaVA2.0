@@ -22,6 +22,7 @@ import {
 import { CAPTION_LIMIT, INSTAGRAM_LIMIT, PRIORITIES, taskSchema, type TaskFormValues } from "@/features/demandas/schemas";
 import { MAX_FILE_BYTES, safeFileName } from "@/features/clientes/schemas";
 import type { DemandasData, TaskView } from "@/features/demandas/types";
+import { ChecklistPanel } from "@/features/checklist/panel";
 
 const toForm = (t: TaskView | null, columnId: string): TaskFormValues => ({
   title: t?.title ?? "",
@@ -233,6 +234,11 @@ export function TaskModal({
         </fieldset>
       </form>
 
+      {task && (
+        <div className="mt-6 border-t border-line pt-4">
+          <ChecklistPanel target={{ task_id: task.id }} canWrite={canWrite} preferred="demanda" />
+        </div>
+      )}
       <Attachments task={task} agencyId={data.agencyId} canWrite={canWrite} canDeleteAll={data.canEdit} />
     </Modal>
   );

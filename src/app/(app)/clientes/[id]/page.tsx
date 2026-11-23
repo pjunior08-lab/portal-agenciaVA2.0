@@ -19,6 +19,7 @@ import { today } from "@/lib/dates";
 import { StrategyPanel } from "./strategy-panel";
 import { PortalPanel } from "./portal-panel";
 import { RedesPanel } from "./redes-panel";
+import { ChecklistPanel } from "@/features/checklist/panel";
 import { metaConfigured } from "@/features/social/meta/graph";
 
 export const metadata: Metadata = { title: "Cliente" };
@@ -30,6 +31,7 @@ const TABS = [
   { id: "estrategia", label: "Central Estratégica" },
   { id: "portal", label: "Portal do Cliente" },
   { id: "redes", label: "Redes sociais" },
+  { id: "checklists", label: "Checklists" },
   // abas cujo conteúdo depende de módulos de fases seguintes
   { id: "conteudo", label: "Conteúdo", phase: 4, depends: "Aprovação e Social" },
   { id: "metricas", label: "Métricas", phase: 9, depends: "integrações com as redes" },
@@ -203,6 +205,14 @@ export default async function ClientePage({
           receipts={(data ?? []).map((t) => ({ ...t, amount: Number(t.amount) }))}
           today={today()}
         />
+      );
+      break;
+    }
+    case "checklists": {
+      body = (
+        <Card className="p-5">
+          <ChecklistPanel target={{ client_id: id }} canWrite={memberCan(ctx, "clientes", "editar")} preferred="cliente" />
+        </Card>
       );
       break;
     }
