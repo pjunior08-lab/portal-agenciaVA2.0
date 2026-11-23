@@ -357,3 +357,28 @@ export function topExpenseTrend(list: Tx[], keys: string[], names: Map<string, s
     points: keys.map((k) => ({ key: k, total: sum(list.filter((t) => t.kind === "despesa" && (t.category_id ?? "") === id && inMonth(t, k))) })),
   }));
 }
+
+/** Resumo do relatório do mês: totais, recebido por cliente, despesas por categoria e o que ficou em aberto. */
+export function monthReport(list: Tx[], today: string) {
+  const receitas = list.filter((t) => t.kind === "receita");
+  const despesas = list.filter((t) => t.kind === "despesa");
+  const group = (rows: Tx[], key: (t: Tx) => string | null) => {
+    const by = new Map<string, { previsto: number; realizado: number }>();
+    for (const t of rows) {
+      const k = key(t) ?? "";
+      const cur = by.get(k) ?? { previsto: 0, realizado: 0 };
+      cur.previsto = round(cur.previsto + t.amount);
+      if (t.paid) cur.realizado = round(cur.realizado + t.amount);
+      by.set(k, cur);
+    }
+    return [...by].map(([id, v]) => ({ id, ...v })).sort((a, b) => b.previsto - a.previsto);
+  };
+  return {
+    receitas: { previsto: sum(receitas), realizado: sum(receitas.filter((t) => t.paid)) },
+    despesas: { previsto: sum(despesas), realizado: sum(despesas.filter((t) => t.paid)) },
+    resultado: { previsto: round(sum(receitas) - sum(despesas)), realizado: round(sum(receitas.filter((t) => t.paid)) - sum(despesas.filter((t) => t.paid))) },
+    porCliente: group(receitas, (t) => t.client_id),
+    porCategoria: group(despesas, (t) => t.category_id),
+    emAberto: list.filter((t) => t.kind !== "transferencia" && !t.paid).map((t) => ({ ...t, atrasado: t.due_date < today })),
+  };
+}

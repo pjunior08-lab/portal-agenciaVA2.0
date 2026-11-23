@@ -193,6 +193,8 @@ export const MODULES: ModuleDef[] = [
       "Recorrência e mensalidades dos clientes",
       "Contas, categorias e metas mensais",
       "Faturas do cliente no portal",
+      "Mensalidades lançadas sozinhas todo dia 1 e aviso de recebimento atrasado",
+      "Relatório do mês para imprimir ou salvar em PDF",
     ],
   },
   {
@@ -200,10 +202,10 @@ export const MODULES: ModuleDef[] = [
     label: "Plano de Mídia",
     icon: Megaphone,
     group: "gestao",
-    phase: 9,
-    status: "a-levantar",
-    summary: "Telas ainda precisam ser levantadas.",
-    features: [],
+    phase: 10,
+    status: "confirmado",
+    summary: "Campanhas de tráfego pago por cliente: verba planejada × investido.",
+    features: ["Campanhas por cliente, plataforma, objetivo e período", "Verba planejada, investido e saldo do mês", "Alerta de ritmo de gasto (mais rápido ou mais devagar que o período)"],
   },
   {
     slug: "mapa-mental",

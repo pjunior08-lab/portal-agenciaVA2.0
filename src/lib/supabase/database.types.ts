@@ -877,6 +877,31 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["checklists"]["Row"]>;
         Relationships: [];
       };
+      media_campaigns: {
+        Row: {
+          id: string;
+          agency_id: string;
+          client_id: string;
+          name: string;
+          platform: "meta" | "google" | "tiktok" | "linkedin" | "outra";
+          objective: "reconhecimento" | "alcance" | "trafego" | "engajamento" | "mensagens" | "leads" | "vendas" | "outro";
+          status: "planejada" | "ativa" | "pausada" | "encerrada";
+          start_date: string;
+          end_date: string;
+          planned_budget: number;
+          spent: number;
+          spent_updated_at: string | null;
+          notes: string;
+          external_id: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["media_campaigns"]["Row"]> &
+          Pick<Database["public"]["Tables"]["media_campaigns"]["Row"], "agency_id" | "client_id" | "name" | "platform" | "objective" | "start_date" | "end_date" | "planned_budget">;
+        Update: Partial<Database["public"]["Tables"]["media_campaigns"]["Row"]>;
+        Relationships: [];
+      };
       mind_maps: {
         Row: {
           id: string;

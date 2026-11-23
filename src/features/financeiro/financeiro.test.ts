@@ -144,3 +144,26 @@ describe("financeiro: visão geral", () => {
     expect(e.find((d) => d.day === "2026-11-30")!.balance).toBe(10000 - 200 + 1000);
   });
 });
+
+describe("relatório do mês", () => {
+  it("soma previsto e realizado, agrupa e lista o que está em aberto", async () => {
+    const { monthReport } = await import("./schemas");
+    const t = (o: Partial<import("./schemas").Tx>) =>
+      ({ id: Math.random().toString(), kind: "receita", subtype: null, amount: 100, description: "x", due_date: "2026-11-10", paid: false, paid_at: null, category_id: null, account_id: null, to_account_id: null, client_id: null, person: null, ...o }) as import("./schemas").Tx;
+    const r = monthReport(
+      [
+        t({ client_id: "a", amount: 1800, paid: true }),
+        t({ client_id: "b", amount: 1200, due_date: "2026-11-05" }),
+        t({ kind: "despesa", subtype: "fixa", category_id: "c1", amount: 500, paid: true }),
+        t({ kind: "transferencia", amount: 50 }),
+      ],
+      "2026-11-20",
+    );
+    expect(r.receitas).toEqual({ previsto: 3000, realizado: 1800 });
+    expect(r.despesas).toEqual({ previsto: 500, realizado: 500 });
+    expect(r.resultado).toEqual({ previsto: 2500, realizado: 1300 });
+    expect(r.porCliente[0]).toEqual({ id: "a", previsto: 1800, realizado: 1800 });
+    expect(r.emAberto).toHaveLength(1);
+    expect(r.emAberto[0].atrasado).toBe(true);
+  });
+});
