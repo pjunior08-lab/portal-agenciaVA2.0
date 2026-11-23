@@ -1,23 +1,16 @@
 import { Sidebar, type ShellUser } from "@/components/shell/sidebar";
 import { MobileNav } from "@/components/shell/mobile-nav";
 import { requireMember } from "@/lib/auth/session";
-import { createClient } from "@/lib/supabase/server";
 import { parsePrefs } from "@/features/preferencias/schemas";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireMember();
-  const supabase = await createClient();
-  const { data: prefs } = await supabase
-    .from("member_preferences")
-    .select("sidebar")
-    .eq("user_id", ctx.userId)
-    .maybeSingle();
   const user: ShellUser = {
     name: ctx.profile.full_name || ctx.email,
     agencyName: ctx.agency.name,
     role: ctx.role,
     access: ctx.access,
-    sidebar: parsePrefs(prefs?.sidebar),
+    sidebar: parsePrefs(ctx.sidebarPrefs),
   };
 
   return (

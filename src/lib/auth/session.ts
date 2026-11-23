@@ -15,6 +15,8 @@ export interface MemberContext {
   agency: Agency;
   role: AppRoleT;
   access: Record<string, AccessLevelT>;
+  /** preferência do menu lateral (JSON cru; quem usa faz o parse) */
+  sidebarPrefs: unknown;
 }
 
 export interface SessionUser {
@@ -46,11 +48,13 @@ export const getMemberContext = cache(async (): Promise<MemberContext | null> =>
   if (!user) return null;
   const supabase = await createClient();
 
-  // uma ida ao banco: vínculo + agência, perfil e acessos em paralelo
-  const [{ data: membership }, { data: profile }, { data: accessRows }] = await Promise.all([
+  // uma ida ao banco: vínculo + agência, perfil, acessos e preferências do menu em paralelo
+  // (o banco fica em São Paulo: cada ida a mais é uma espera a mais em toda página)
+  const [{ data: membership }, { data: profile }, { data: accessRows }, { data: prefs }] = await Promise.all([
     supabase.from("agency_members").select("agency_id, role, status, agencies(*)").eq("user_id", user.id).eq("status", "ativo").maybeSingle(),
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase.from("member_module_access").select("module, level, agency_id").eq("user_id", user.id),
+    supabase.from("member_preferences").select("sidebar").eq("user_id", user.id).maybeSingle(),
   ]);
   if (!membership) return null;
   const agency = Array.isArray(membership.agencies) ? membership.agencies[0] : membership.agencies;
@@ -63,6 +67,7 @@ export const getMemberContext = cache(async (): Promise<MemberContext | null> =>
     agency,
     role: membership.role,
     access: Object.fromEntries((accessRows ?? []).filter((r) => r.agency_id === membership.agency_id).map((r) => [r.module, r.level])),
+    sidebarPrefs: prefs?.sidebar ?? null,
   };
 });
 
