@@ -17,4 +17,10 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    # só HTTPS por 2 anos (inclui subdomínios)
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    Cross-Origin-Opener-Policy = "same-origin"
+    # de onde o portal pode carregar coisas: só dele mesmo e do Supabase do projeto
+    # (scripts/estilos inline são exigência do Next.js; imagens podem vir de qualquer endereço HTTPS)
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https://vjclcqslgojxtceityii.supabase.co; connect-src 'self' https://vjclcqslgojxtceityii.supabase.co wss://vjclcqslgojxtceityii.supabase.co; font-src 'self' data:; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"

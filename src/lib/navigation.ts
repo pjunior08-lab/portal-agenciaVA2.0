@@ -1,30 +1,23 @@
 import {
   BarChart3,
-  Briefcase,
   CalendarDays,
   CheckCircle2,
-  Clock,
   Cog,
   FileSignature,
   FileText,
   Filter,
-  FolderOpen,
   Home,
   KanbanSquare,
   ListChecks,
   MessageCircle,
   Network,
-  NotebookPen,
-  Rocket,
   Share2,
   Sparkles,
   Sun,
   Tags,
   Target,
   Users,
-  UsersRound,
   Wallet,
-  Wrench,
   Megaphone,
   type LucideIcon,
 } from "lucide-react";
@@ -274,19 +267,14 @@ export const MODULES: ModuleDef[] = [
       "Menu lateral personalizável",
     ],
   },
-  // Mais áreas — só o nome existe na referência; telas a levantar.
+  // Mais áreas. Cortadas em 23/11 por não fazerem parte da operação (decisão da agência):
+  // Projetos, Squads, Notas (existe Anotações no cliente), Drive (existe Arquivos no cliente),
+  // Timesheet e Ferramentas. Onboarding virou um modelo de Checklist.
   ...(
     [
-      ["projetos", "Projetos", Briefcase],
       ["servicos", "Tabela de Serviços", Tags],
-      ["squads", "Squads", UsersRound],
-      ["onboarding", "Onboarding", Rocket],
-      ["desempenho", "Desempenho", BarChart3],
-      ["notas", "Notas", NotebookPen],
       ["checklist", "Checklist", ListChecks],
-      ["timesheet", "Timesheet", Clock],
-      ["drive", "Drive", FolderOpen],
-      ["ferramentas", "Ferramentas", Wrench],
+      ["desempenho", "Desempenho", BarChart3],
     ] as const
   ).map(
     ([slug, label, icon]): ModuleDef => ({

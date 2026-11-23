@@ -14,7 +14,6 @@ import {
   Home,
   KanbanSquare,
   Target,
-  Timer,
   TrendingUp,
   Users,
   Wallet,
@@ -207,7 +206,6 @@ export default async function InicioPage() {
               hint="recebido menos pago"
             />
           )}
-          <StatCard label="Horas" value="—" icon={Timer} hint="Apontamento de horas ainda em levantamento" />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">

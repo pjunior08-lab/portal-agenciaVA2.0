@@ -9,4 +9,5 @@
 - Dados de demonstração só em script de seed, marcados como "Demonstração". Nunca em produção.
 - Nunca usar a chave secreta do Supabase em código que roda no navegador.
 - Não inventar funcionalidades: o escopo de cada módulo está em `src/lib/navigation.ts` e no documento de planejamento.
+- Funções SQL novas: em `private`, usadas em políticas, precisam de `grant execute ... to authenticated`; em `public`, função sem login precisa de `grant execute ... to anon` explícito (o padrão não dá mais).
 - Antes de commitar: `npm run lint && npm run typecheck && npm test && npm run build`.

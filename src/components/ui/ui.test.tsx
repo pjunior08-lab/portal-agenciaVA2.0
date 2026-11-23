@@ -60,11 +60,11 @@ describe("formatBRL", () => {
 });
 
 describe("navegação", () => {
-  it("tem slugs únicos e cobre os 27 itens do menu (17 + 10 em Mais áreas)", () => {
+  it("tem slugs únicos e cobre os 20 itens do menu (17 + 3 em Mais áreas)", () => {
     const slugs = MODULES.map((m) => m.slug);
     expect(new Set(slugs).size).toBe(slugs.length);
     expect(MODULES.filter((m) => m.group !== "mais")).toHaveLength(17);
-    expect(MODULES.filter((m) => m.group === "mais")).toHaveLength(10);
+    expect(MODULES.filter((m) => m.group === "mais")).toHaveLength(3);
   });
 
   it("só lista funcionalidades para módulos já levantados", () => {
