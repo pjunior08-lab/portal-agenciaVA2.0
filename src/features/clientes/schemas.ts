@@ -109,6 +109,7 @@ export const strategySchema = z.object({
   competitors: z.string().max(10000),
   positioning: z.string().max(10000),
   visual_identity: z.string().max(10000),
+  voice_tone: z.string().max(10000),
 });
 
 export const STRATEGY_FIELDS = [
@@ -117,6 +118,11 @@ export const STRATEGY_FIELDS = [
   { key: "competitors", label: "Concorrentes", hint: "Quem disputa a mesma atenção e o que fazem bem ou mal." },
   { key: "positioning", label: "Posicionamento", hint: "Como a marca quer ser lembrada e o que a diferencia." },
   { key: "visual_identity", label: "Identidade visual", hint: "Cores, fontes, estilo de foto e referências." },
+  {
+    key: "voice_tone",
+    label: "Tom de voz e regras de legenda",
+    hint: "Como o cliente fala, palavras que usa ou evita, emojis, estrutura da legenda e dados fixos (horário, endereço, telefone). O Assistente IA segue isto.",
+  },
 ] as const;
 
 export const portalSchema = z.object({

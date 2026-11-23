@@ -902,6 +902,21 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["media_campaigns"]["Row"]>;
         Relationships: [];
       };
+      ai_usage: {
+        Row: {
+          id: string;
+          agency_id: string;
+          user_id: string;
+          client_id: string | null;
+          mode: "legenda" | "pauta" | "resumo" | "livre";
+          input_tokens: number;
+          output_tokens: number;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["ai_usage"]["Row"]> & Pick<Database["public"]["Tables"]["ai_usage"]["Row"], "agency_id" | "user_id" | "mode">;
+        Update: Partial<Database["public"]["Tables"]["ai_usage"]["Row"]>;
+        Relationships: [];
+      };
       mind_maps: {
         Row: {
           id: string;
@@ -1101,6 +1116,7 @@ export type Database = {
           updated_at: string;
           updated_by: string | null;
           visual_identity: string;
+          voice_tone: string;
         };
         Insert: Partial<Database["public"]["Tables"]["client_strategy"]["Row"]> & { agency_id: string; client_id: string };
         Update: Partial<Database["public"]["Tables"]["client_strategy"]["Row"]>;
@@ -1415,6 +1431,7 @@ export type Database = {
           competitors: string;
           positioning: string;
           visual_identity: string;
+          voice_tone: string;
           updated_at: string;
         }[];
       };
